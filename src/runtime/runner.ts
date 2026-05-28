@@ -189,7 +189,10 @@ async function main(): Promise<void> {
 
   const browser = await chromium.launch({ headless: options.headless });
   const storageState = fs.existsSync(AUTH_STATE_PATH) ? AUTH_STATE_PATH : undefined;
-  const browserContext = await browser.newContext(storageState ? { storageState } : {});
+  const browserContext = await browser.newContext({
+    ...(storageState ? { storageState } : {}),
+    ignoreHTTPSErrors: true,
+  });
   const page = await browserContext.newPage();
   const agent = new PlaywrightAgent(page);
   const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent });

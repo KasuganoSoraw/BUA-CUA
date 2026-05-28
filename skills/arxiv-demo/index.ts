@@ -63,7 +63,8 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
       await agent.aiTap('右上角 Search 按钮');
     },
     async () => {
-      await expect(page.getByText('Search Results', { exact: false })).toBeVisible();
+      await page.waitForURL(/\/search\//, { timeout: 15000 });
+      await expect(page.getByText(/Showing .* results for/)).toBeVisible();
     },
   );
 
@@ -100,7 +101,7 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
     '下载当前论文 PDF',
     async () => {
       const pdfUrl = page.url();
-      const response = await page.context().request.get(pdfUrl);
+      const response = await page.context().request.get(pdfUrl, { timeout: 120000 });
       if (!response.ok()) {
         ctx.fail(`PDF 下载请求失败: ${response.status()} ${response.statusText()}`);
       }
