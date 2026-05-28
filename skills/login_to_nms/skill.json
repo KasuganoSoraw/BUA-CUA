@@ -1,0 +1,14 @@
+{
+  "name": "login_to_nms",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Mock login pre-skill that demonstrates session setup boundaries.",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

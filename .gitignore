@@ -21,3 +21,11 @@ Thumbs.db
 *.log
 dist/
 build/
+runs/
+auth/storage-state.json
+
+# Node
+node_modules/
+
+# Local environment
+.env

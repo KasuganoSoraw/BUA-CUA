@@ -1,0 +1,24 @@
+{
+  "name": "mock_query_eline_service_info",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Mock read-only Task Skill demonstrating Playwright primary paths, Midscene fallbacks, and verifiers.",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": true,
+  "preSkills": ["login_to_nms"],
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["neKeyword", "neName", "fields"],
+    "properties": {
+      "neKeyword": { "type": "string", "minLength": 1 },
+      "neName": { "type": "string", "minLength": 1 },
+      "fields": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "minItems": 1
+      }
+    }
+  }
+}

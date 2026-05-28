@@ -1,0 +1,17 @@
+[project]
+name = "bua-cua"
+version = "0.1.0"
+description = "Control-plane CLI for BUA-CUA Task Skill MVP."
+readme = "README.md"
+requires-python = "==3.12.10"
+dependencies = []
+
+[project.scripts]
+bua-cua = "bua_cua:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
