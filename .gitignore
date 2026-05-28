@@ -23,6 +23,9 @@ dist/
 build/
 runs/
 auth/storage-state.json
+downloads/
+test-results/
+.playwright-tmp/
 
 # Node
 node_modules/
