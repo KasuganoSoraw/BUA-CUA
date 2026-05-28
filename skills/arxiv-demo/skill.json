@@ -1,0 +1,38 @@
+{
+  "name": "arxiv-demo",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "在 arXiv 搜索论文，按相关性排序，打开排名靠前结果的 PDF 并下载。",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["query"],
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "description": "arXiv 搜索关键词。"
+      },
+      "sortBy": {
+        "type": "string",
+        "default": "relevance",
+        "enum": ["relevance", "lastUpdatedDate", "submittedDate"],
+        "description": "搜索结果排序方式。"
+      },
+      "resultIndex": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 1,
+        "description": "要打开的搜索结果序号，从 1 开始。"
+      },
+      "downloadDir": {
+        "type": "string",
+        "default": "downloads",
+        "description": "PDF 下载保存目录，相对于仓库根目录。"
+      }
+    }
+  }
+}
