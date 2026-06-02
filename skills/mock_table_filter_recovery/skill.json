@@ -1,0 +1,14 @@
+{
+  "name": "mock_table_filter_recovery",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Mock step recovery demo with a Subnet column filter button that has no accessible name.",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
