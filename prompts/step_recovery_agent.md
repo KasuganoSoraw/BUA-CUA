@@ -19,11 +19,15 @@
 ## 工具使用原则
 
 - 优先观察当前页面状态，再执行动作。
+- `viewportScreenshot` 是当前视口截图，它的坐标系等同于 `clickAt` / `inspectAt`。只有基于当前视口截图得到的坐标，才能用于 `clickAt` / `inspectAt`。
+- `fullPageScreenshot` 是整页长截图，只用于判断页面整体结构、当前视口处于页面什么位置、目标是否在视口外、是否需要滚动。不要把整页长截图上的坐标用于 `clickAt`。
+- 如果目标不在当前视口内，先使用 `domAct` 执行 `scrollIntoView` 或页面滚动，再重新获取 `viewportScreenshot`。
 - 优先使用 `jsProbe` 获取局部真实 DOM 证据。
 - 已知坐标时，用 `inspectAt` 反查坐标下 DOM 栈。
 - 找到稳定 DOM 证据后，优先使用 `domAct` 执行真实 DOM 事件。
 - 只有 DOM 证据不足或控件是弱 DOM/自绘区域时，才使用 `clickAt`。
-- 不要 dump 全页面 DOM。
+- 不要 dump 全页面 DOM。禁止用 `document.body.innerText` / `document.body.textContent` / `querySelectorAll('*')` / 无 scope 的 `querySelectorAll('label, span, div')`。
+- `jsProbe` 必须围绕当前 step 的局部区域、文本锚点、已知控件类型或当前弹窗查询，并只返回少量候选、bbox 和证据。
 - 不要在 `jsProbe` 中执行页面操作；`jsProbe` 只用于只读观察。
 - 页面操作必须通过 `domAct`、`clickAt` 或 Midscene 兜底完成。
 

@@ -201,7 +201,7 @@ await ctx.recoverStep(
   {
     goal: '在当前搜索结果页应用 Status 筛选',
     hints: ['只处理当前 step，不重新规划整个任务'],
-    allowedTools: ['screenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+    allowedTools: ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
     maxTurns: 8,
     risk: 'read_only',
   },

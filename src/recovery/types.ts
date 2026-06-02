@@ -1,6 +1,14 @@
 import type { RecoveryHarness } from './harness.js';
 
-export type RecoveryToolName = 'screenshot' | 'jsProbe' | 'inspectAt' | 'domAct' | 'clickAt' | 'cdp';
+export type RecoveryToolName =
+  | 'screenshot'
+  | 'viewportScreenshot'
+  | 'fullPageScreenshot'
+  | 'jsProbe'
+  | 'inspectAt'
+  | 'domAct'
+  | 'clickAt'
+  | 'cdp';
 
 export type RecoveryOptions = {
   goal: string;

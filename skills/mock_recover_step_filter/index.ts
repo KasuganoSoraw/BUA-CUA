@@ -44,7 +44,7 @@ export async function run(ctx: SkillContext): Promise<void> {
         '筛选面板的 DOM id 是 filter-panel，打开成功后 document.querySelector("#filter-panel").hidden 应为 false',
         '确认 filter-panel.hidden 为 false 后直接回复 done，不需要继续探索',
       ],
-      allowedTools: ['screenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+      allowedTools: ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
       maxTurns: 8,
       risk: 'read_only',
     },

@@ -48,27 +48,13 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
         '输入关键词后提交搜索，目标是进入 Search Results 页面',
         '完成后如果 URL 包含 /search 且 h2 显示 Search Results，请回复 done',
       ],
-      allowedTools: ['screenshot', 'jsProbe', 'domAct', 'clickAt'],
+      allowedTools: ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'domAct', 'clickAt'],
       maxTurns: 10,
       risk: 'read_only',
     },
     async () => {
-      await ctx.harness.domAct('fallback search clinical trials', `
-        const input = document.querySelector('#advcond');
-        if (!input) {
-          throw new Error('Condition/disease input #advcond not found');
-        }
-        input.focus();
-        input.value = ${JSON.stringify(args.query)};
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        const searchButton = Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Search');
-        if (!searchButton) {
-          throw new Error('Search button not found');
-        }
-        searchButton.click();
-        return { ok: true };
-      `);
+      await agent.aiInput('ClinicalTrials.gov 主搜索区域中的 Condition/disease 输入框，不是 glossary 搜索框', { value: args.query });
+      await agent.aiTap('ClinicalTrials.gov 主搜索区域中的 Search 按钮');
     },
     async () => {
       await expect(page).toHaveURL(/\/search/, { timeout: 45000 });
@@ -91,23 +77,13 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
         '应用成功后 URL 通常包含 aggFilters=status:not%20rec，标题会包含 Not yet recruiting, Recruiting studies',
         '不要点击 Save、RSS、PRS Login 或反馈按钮',
       ],
-      allowedTools: ['screenshot', 'jsProbe', 'domAct', 'clickAt'],
+      allowedTools: ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'domAct', 'clickAt'],
       maxTurns: 10,
       risk: 'read_only',
     },
     async () => {
-      await ctx.harness.domAct('fallback apply recruitment status filters', `
-        const notYet = document.querySelector('#adv-check0-status0');
-        const recruiting = document.querySelector('#adv-check0-status1');
-        const apply = document.querySelector('#apply-filters');
-        if (!notYet || !recruiting || !apply) {
-          throw new Error('Status checkbox or Apply Filters button not found');
-        }
-        if (!notYet.checked) notYet.click();
-        if (!recruiting.checked) recruiting.click();
-        apply.click();
-        return { ok: true, notYet: notYet.checked, recruiting: recruiting.checked };
-      `);
+      await agent.aiTap(`左侧 Study Status 或 Status 筛选中的 ${args.statusFilter}`);
+      await agent.aiTap('左侧筛选区域的 Apply Filters 按钮');
     },
     async () => {
       await expect(page).toHaveURL(/\/search/, { timeout: 45000 });
@@ -123,61 +99,55 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
   );
 
   await ctx.step('下载搜索结果 CSV', async () => {
-    const downloadPromise = page.waitForEvent('download', { timeout: 240000 });
-
     await ctx.recoverStep(
-      '打开 Download 弹窗并触发 CSV 下载',
+      '打开 Download 弹窗并确认 CSV 格式',
       {
-        goal: '打开搜索结果页的 Download 弹窗，选择 CSV 格式，下载当前搜索结果',
+        goal: '打开搜索结果页的 Download 弹窗，并确认 CSV 格式已选中。不要点击弹窗底部最终 Download 按钮。',
         hints: [
           '搜索结果上方 action bar 有 Download 按钮，id 可能是 action-bar-download-btn',
-          'Download 弹窗里选择 CSV 格式，不选择 JSON 或 RIS',
+          '只需要打开 Download 弹窗并确认 CSV 格式已选中，不要触发最终下载',
+          'Download 弹窗里 CSV 单选项通常是 #download-format-csv，默认已经选中',
           '如果能找到 #action-bar-download-btn，可以先点击它打开弹窗',
-          '如果弹窗要求选择结果范围，保留默认范围即可',
-          '如果弹窗要求选择字段，保留默认字段即可',
-          '最后点击弹窗中的 Download 按钮触发浏览器下载',
+          '如果弹窗要求选择结果范围或字段，保留默认即可',
+          '看到 #download-format-csv 存在且 checked 为 true 后回复 done',
           '不要点击 Save、RSS、Display 或站点反馈按钮',
         ],
-        allowedTools: ['screenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
-        maxTurns: 10,
+        allowedTools: ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+        maxTurns: 14,
         risk: 'read_only',
       },
       async () => {
-        await ctx.harness.domAct('fallback trigger csv download', `
-          (async () => {
-          const openButton = document.querySelector('#action-bar-download-btn');
-          if (!openButton) {
-            throw new Error('Download action bar button not found');
-          }
-          openButton.click();
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const csv = document.querySelector('#download-format-csv');
-          if (csv && !csv.checked) {
-            csv.click();
-          }
-          const allResults = document.querySelector('#download-results-all');
-          if (allResults && !allResults.checked) {
-            allResults.click();
-          }
-          const modalDownload = Array.from(document.querySelectorAll('button')).find((button) => {
-            const text = button.textContent?.trim();
-            return text === 'Download' && !button.id;
-          });
-          if (!modalDownload) {
-            throw new Error('Modal Download button not found');
-          }
-          modalDownload.click();
-          return { ok: true };
-          })()
-        `);
+        await agent.aiTap('搜索结果 action bar 中的 Download 按钮');
+        await expect(page.locator('#download-format-csv')).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('#download-format-csv')).toBeChecked({ timeout: 30000 });
+      },
+      async () => {
+        await expect(page.locator('#download-format-csv')).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('#download-format-csv')).toBeChecked({ timeout: 30000 });
       },
     );
 
-    const download = await downloadPromise;
+    const downloadPromise = page
+      .waitForEvent('download', { timeout: 120000 })
+      .then((download) => ({ ok: true as const, download }))
+      .catch((error: unknown) => ({ ok: false as const, error }));
+
+    try {
+      await agent.aiTap('Download 弹窗底部的 Download 按钮');
+    } catch (error) {
+      ctx.log('midscene_download_tap_failed', error instanceof Error ? error.message : String(error), undefined, 'warn');
+      await page.locator('button').filter({ hasText: /^Download$/ }).last().click();
+    }
+
+    const downloadResult = await downloadPromise;
+    if (!downloadResult.ok) {
+      throw downloadResult.error;
+    }
+
     const outputDir = path.resolve(process.cwd(), args.downloadDir);
     await fs.mkdir(outputDir, { recursive: true });
     const outputPath = path.join(outputDir, `${safeFilePart(args.query)}-clinical-trials-${Date.now()}.${args.downloadFormat}`);
-    await download.saveAs(outputPath);
+    await downloadResult.download.saveAs(outputPath);
 
     const stats = await fs.stat(outputPath);
     if (stats.size <= 0) {
@@ -187,7 +157,7 @@ export async function run(ctx: SkillContext, rawArgs: Record<string, unknown>): 
     ctx.log('csv_downloaded', 'ClinicalTrials.gov CSV 下载完成', {
       outputPath,
       bytes: stats.size,
-      suggestedFilename: download.suggestedFilename(),
+      suggestedFilename: downloadResult.download.suggestedFilename(),
     });
   });
 }

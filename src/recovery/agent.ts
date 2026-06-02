@@ -10,7 +10,33 @@ const TOOL_SCHEMAS: Record<RecoveryToolName, Record<string, unknown>> = {
     type: 'function',
     function: {
       name: 'screenshot',
-      description: '保存当前页面截图，返回截图路径。',
+      description: '兼容别名：保存当前视口截图，返回截图路径。坐标系等同于 clickAt / inspectAt。',
+      parameters: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+        },
+      },
+    },
+  },
+  viewportScreenshot: {
+    type: 'function',
+    function: {
+      name: 'viewportScreenshot',
+      description: '保存当前视口截图，返回截图路径。只有基于该截图得到的坐标才能用于 clickAt / inspectAt。',
+      parameters: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+        },
+      },
+    },
+  },
+  fullPageScreenshot: {
+    type: 'function',
+    function: {
+      name: 'fullPageScreenshot',
+      description: '保存整页长截图，返回截图路径。仅用于判断页面整体结构、滚动方向和目标是否在视口外，不可直接用于 clickAt 坐标。',
       parameters: {
         type: 'object',
         properties: {
@@ -128,6 +154,10 @@ async function runTool(request: RecoveryRequest, call: ToolCall): Promise<unknow
   switch (call.function.name as RecoveryToolName) {
     case 'screenshot':
       return request.harness.screenshot(String(args.label ?? request.stepName));
+    case 'viewportScreenshot':
+      return request.harness.viewportScreenshot(String(args.label ?? request.stepName));
+    case 'fullPageScreenshot':
+      return request.harness.fullPageScreenshot(String(args.label ?? request.stepName));
     case 'jsProbe':
       return request.harness.jsProbe(String(args.name ?? 'probe'), String(args.code ?? ''));
     case 'inspectAt':
@@ -153,7 +183,7 @@ export async function runStepRecovery(request: RecoveryRequest): Promise<Recover
 
   const client = new RecoveryChatClient(config);
   const maxTurns = request.options.maxTurns ?? client.defaultMaxTurns;
-  const allowedTools = request.options.allowedTools ?? ['screenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'];
+  const allowedTools = request.options.allowedTools ?? ['viewportScreenshot', 'fullPageScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'];
   const tools = allowedTools.map((tool) => TOOL_SCHEMAS[tool]).filter(Boolean);
 
   const messages: ChatMessage[] = [
@@ -174,13 +204,30 @@ export async function runStepRecovery(request: RecoveryRequest): Promise<Recover
 
   if (client.visionEnabled) {
     try {
-      const screenshotPath = await request.harness.screenshot(`recovery-${request.stepName}`);
-      request.log('recovery_initial_screenshot', screenshotPath, { screenshotPath });
+      const viewportScreenshotPath = await request.harness.viewportScreenshot(`recovery-viewport-${request.stepName}`);
+      const fullPageScreenshotPath = await request.harness.fullPageScreenshot(`recovery-full-page-${request.stepName}`);
+      request.log('recovery_initial_screenshot', viewportScreenshotPath, {
+        screenshotPath: viewportScreenshotPath,
+        kind: 'viewport',
+        coordinateScope: 'clickAt/inspectAt',
+      });
+      request.log('recovery_initial_full_page_screenshot', fullPageScreenshotPath, {
+        screenshotPath: fullPageScreenshotPath,
+        kind: 'fullPage',
+        coordinateScope: 'global_observation_only',
+      });
       messages.push({
         role: 'user',
         content: [
-          { type: 'text', text: `当前页面截图，路径：${screenshotPath}` },
-          { type: 'image_url', image_url: { url: await imageFileToDataUrl(screenshotPath) } },
+          { type: 'text', text: `当前视口截图，路径：${viewportScreenshotPath}。该图坐标可用于 clickAt / inspectAt。` },
+          { type: 'image_url', image_url: { url: await imageFileToDataUrl(viewportScreenshotPath) } },
+        ],
+      });
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: `整页长截图，路径：${fullPageScreenshotPath}。该图只用于判断全局结构、滚动方向和目标是否在视口外，不要把它的坐标用于 clickAt。` },
+          { type: 'image_url', image_url: { url: await imageFileToDataUrl(fullPageScreenshotPath) } },
         ],
       });
     } catch (error) {
@@ -191,7 +238,14 @@ export async function runStepRecovery(request: RecoveryRequest): Promise<Recover
   request.log('recovery_start', request.options.goal, { allowedTools, maxTurns });
 
   for (let turn = 1; turn <= maxTurns; turn += 1) {
-    const assistant = await client.complete({ messages, tools });
+    let assistant: ChatMessage;
+    try {
+      assistant = await client.complete({ messages, tools });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      request.log('recovery_model_failed', message, undefined, 'warn');
+      return { ok: false, reason: message };
+    }
     messages.push(assistant);
 
     const toolCalls = assistant.tool_calls ?? [];

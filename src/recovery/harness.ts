@@ -22,6 +22,8 @@ type DomStackItem = {
 
 export type RecoveryHarness = {
   screenshot(label?: string): Promise<string>;
+  viewportScreenshot(label?: string): Promise<string>;
+  fullPageScreenshot(label?: string): Promise<string>;
   jsProbe<T = unknown>(name: string, code: string): Promise<T>;
   inspectAt(x: number, y: number): Promise<DomStackItem[]>;
   domAct<T = unknown>(name: string, code: string): Promise<T>;
@@ -30,6 +32,9 @@ export type RecoveryHarness = {
 };
 
 const FORBIDDEN_PROBE_PATTERNS = [
+  /\bdocument\.body\.(innerText|textContent)\b/i,
+  /\bdocument\.querySelectorAll\s*\(\s*['"`]\*['"`]\s*\)/i,
+  /\bdocument\.querySelectorAll\s*\(\s*['"`](label|span|div|label,\s*span,\s*div|div,\s*span,\s*label)['"`]\s*\)/i,
   /\bfetch\s*\(/i,
   /\bXMLHttpRequest\b/i,
   /\bnavigator\.sendBeacon\b/i,
@@ -42,7 +47,7 @@ const FORBIDDEN_PROBE_PATTERNS = [
   /\.(appendChild|removeChild|replaceChild|insertBefore)\s*\(/i,
   /\b(setAttribute|removeAttribute)\s*\(/i,
   /\bdispatchEvent\s*\(/i,
-  /\b(value|checked|selected)\s*=/i,
+  /\b(value|checked|selected)\s*(?<![=!<>])=(?!=)/i,
   /\binnerHTML\s*=/i,
   /\bouterHTML\s*=/i,
   /\btextContent\s*=/i,
@@ -74,7 +79,14 @@ export async function createRecoveryHarness(params: {
   const { page, browserContext, artifactDir } = params;
   const cdpSession: CDPSession = await browserContext.newCDPSession(page);
 
-  async function screenshot(label = 'harness'): Promise<string> {
+  async function viewportScreenshot(label = 'viewport'): Promise<string> {
+    fs.mkdirSync(artifactDir, { recursive: true });
+    const screenshotPath = path.join(artifactDir, `${safeLabel(label)}-${Date.now()}.png`);
+    await page.screenshot({ path: screenshotPath, fullPage: false, timeout: 30000 });
+    return screenshotPath;
+  }
+
+  async function fullPageScreenshot(label = 'full-page'): Promise<string> {
     fs.mkdirSync(artifactDir, { recursive: true });
     const screenshotPath = path.join(artifactDir, `${safeLabel(label)}-${Date.now()}.png`);
     await page.screenshot({ path: screenshotPath, fullPage: true, timeout: 30000 });
@@ -92,7 +104,9 @@ export async function createRecoveryHarness(params: {
   }
 
   return {
-    screenshot,
+    screenshot: viewportScreenshot,
+    viewportScreenshot,
+    fullPageScreenshot,
     async jsProbe<T = unknown>(_name: string, code: string): Promise<T> {
       assertReadOnlyProbe(code);
       return evaluateWrapped<T>(code);
