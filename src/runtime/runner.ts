@@ -5,7 +5,9 @@ import { Ajv } from 'ajv';
 import dotenv from 'dotenv';
 import { chromium } from 'playwright';
 import { PlaywrightAgent } from '@midscene/web/playwright';
+import { runStepRecovery } from '../recovery/agent.js';
 import { createRecoveryHarness } from '../recovery/harness.js';
+import type { RecoveryOptions } from '../recovery/types.js';
 import { JsonlLogger } from './logger.js';
 import type { SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
 
@@ -152,6 +154,54 @@ function makeContext(params: {
           logger.info(manifest.name, 'verify_end', undefined, undefined, name);
         }
         return result;
+      });
+    },
+    async withRecovery<T>(
+      name: string,
+      primary: () => Promise<T>,
+      recoveryOptions: RecoveryOptions,
+      midsceneFallback: (error: unknown) => Promise<T>,
+      verify?: () => Promise<void>,
+    ): Promise<T> {
+      return this.step(name, async () => {
+        let result: T | undefined;
+        let primaryError: unknown;
+
+        try {
+          logger.info(manifest.name, 'primary_start', undefined, undefined, name);
+          result = await primary();
+          logger.info(manifest.name, 'primary_end', undefined, undefined, name);
+        } catch (error) {
+          primaryError = error;
+          logger.warn(manifest.name, 'primary_failed', error instanceof Error ? error.message : String(error), undefined, name);
+        }
+
+        if (primaryError) {
+          const recoveryResult = await runStepRecovery({
+            skillName: manifest.name,
+            stepName: name,
+            failure: primaryError,
+            options: recoveryOptions,
+            harness,
+            log(type, message, data, level) {
+              logger.write({ level: level ?? 'info', type, skill: manifest.name, step: name, message, data });
+            },
+          });
+
+          if (!recoveryResult.ok) {
+            logger.warn(manifest.name, 'midscene_fallback_start', recoveryResult.reason, undefined, name);
+            result = await midsceneFallback(primaryError);
+            logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+          }
+        }
+
+        if (verify) {
+          logger.info(manifest.name, 'verify_start', undefined, undefined, name);
+          await verify();
+          logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+        }
+
+        return result as T;
       });
     },
     log(type: string, message?: string, data?: Record<string, unknown>, level = 'info') {

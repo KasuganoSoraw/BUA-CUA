@@ -1,5 +1,6 @@
 import type { Browser, BrowserContext, Page } from 'playwright';
 import type { RecoveryHarness } from '../recovery/harness.js';
+import type { RecoveryOptions } from '../recovery/types.js';
 
 export type SkillArgs = Record<string, unknown>;
 
@@ -41,6 +42,13 @@ export type SkillContext = {
     name: string,
     primary: () => Promise<T>,
     fallback: (error: unknown) => Promise<T>,
+    verify?: () => Promise<void>,
+  ): Promise<T>;
+  withRecovery<T>(
+    name: string,
+    primary: () => Promise<T>,
+    recoveryOptions: RecoveryOptions,
+    midsceneFallback: (error: unknown) => Promise<T>,
     verify?: () => Promise<void>,
   ): Promise<T>;
   log(type: string, message?: string, data?: Record<string, unknown>, level?: LogLevel): void;
