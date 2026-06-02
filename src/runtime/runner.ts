@@ -189,6 +189,22 @@ function makeContext(params: {
           });
 
           if (!recoveryResult.ok) {
+            if (!recoveryResult.skipped && verify) {
+              try {
+                logger.info(manifest.name, 'recovery_verify_start', undefined, undefined, name);
+                await verify();
+                logger.info(manifest.name, 'recovery_success_by_verifier', recoveryResult.reason, undefined, name);
+                return undefined as T;
+              } catch (verifyError) {
+                logger.warn(
+                  manifest.name,
+                  'recovery_verify_failed',
+                  verifyError instanceof Error ? verifyError.message : String(verifyError),
+                  undefined,
+                  name,
+                );
+              }
+            }
             logger.warn(manifest.name, 'midscene_fallback_start', recoveryResult.reason, undefined, name);
             result = await midsceneFallback(primaryError);
             logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);

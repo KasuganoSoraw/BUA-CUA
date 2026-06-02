@@ -60,6 +60,12 @@ function safeLabel(label: string): string {
   return label.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'harness';
 }
 
+function assertFinitePoint(x: number, y: number): void {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new Error(`Invalid point: x=${x}, y=${y}`);
+  }
+}
+
 export async function createRecoveryHarness(params: {
   page: Page;
   browserContext: BrowserContext;
@@ -76,12 +82,13 @@ export async function createRecoveryHarness(params: {
   }
 
   async function evaluateWrapped<T>(code: string): Promise<T> {
-    return page.evaluate(`(() => {
-      const __userFn = () => {
-        ${code}
-      };
-      return __userFn();
-    })()`) as Promise<T>;
+    return page.evaluate((source) => {
+      const trimmed = source.trim();
+      if (trimmed.startsWith('(') || trimmed.startsWith('async ')) {
+        return (0, eval)(source);
+      }
+      return Function(source)();
+    }, code) as Promise<T>;
   }
 
   return {
@@ -91,43 +98,33 @@ export async function createRecoveryHarness(params: {
       return evaluateWrapped<T>(code);
     },
     async inspectAt(x: number, y: number): Promise<DomStackItem[]> {
-      return page.evaluate(
-        ({ pointX, pointY }) => {
-          function textOf(element: Element): string {
-            return (element.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
-          }
-
-          function rectOf(element: Element) {
-            const rect = element.getBoundingClientRect();
-            if (!rect || (rect.width === 0 && rect.height === 0)) {
-              return null;
-            }
-            return {
-              x: rect.x,
-              y: rect.y,
-              w: rect.width,
-              h: rect.height,
-            };
-          }
-
-          return document.elementsFromPoint(pointX, pointY).slice(0, 8).map((element) => ({
-            tag: element.tagName.toLowerCase(),
-            id: element.id || '',
-            className: typeof element.className === 'string' ? element.className : '',
-            role: element.getAttribute('role'),
-            ariaLabel: element.getAttribute('aria-label'),
-            title: element.getAttribute('title'),
-            text: textOf(element),
-            rect: rectOf(element),
-          }));
-        },
-        { pointX: x, pointY: y },
-      );
+      assertFinitePoint(x, y);
+      return page.evaluate(`(() => {
+        const pointX = ${JSON.stringify(x)};
+        const pointY = ${JSON.stringify(y)};
+        const textOf = (element) => (element.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 200);
+        const rectOf = (element) => {
+          const rect = element.getBoundingClientRect();
+          if (!rect || (rect.width === 0 && rect.height === 0)) return null;
+          return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+        };
+        return document.elementsFromPoint(pointX, pointY).slice(0, 8).map((element) => ({
+          tag: element.tagName.toLowerCase(),
+          id: element.id || '',
+          className: typeof element.className === 'string' ? element.className : '',
+          role: element.getAttribute('role'),
+          ariaLabel: element.getAttribute('aria-label'),
+          title: element.getAttribute('title'),
+          text: textOf(element),
+          rect: rectOf(element),
+        }));
+      })()`) as Promise<DomStackItem[]>;
     },
     async domAct<T = unknown>(_name: string, code: string): Promise<T> {
       return evaluateWrapped<T>(code);
     },
     async clickAt(x: number, y: number): Promise<void> {
+      assertFinitePoint(x, y);
       await cdpSession.send('Input.dispatchMouseEvent', {
         type: 'mousePressed',
         x,
