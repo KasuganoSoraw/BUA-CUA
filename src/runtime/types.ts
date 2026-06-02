@@ -1,4 +1,5 @@
 import type { Browser, BrowserContext, Page } from 'playwright';
+import type { RecoveryHarness } from '../recovery/harness.js';
 
 export type SkillArgs = Record<string, unknown>;
 
@@ -32,6 +33,7 @@ export type SkillContext = {
   browser: Browser;
   browserContext: BrowserContext;
   agent: any;
+  harness: RecoveryHarness;
   runId: string;
   skillName: string;
   step<T>(name: string, fn: () => Promise<T>): Promise<T>;

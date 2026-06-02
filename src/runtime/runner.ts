@@ -5,6 +5,7 @@ import { Ajv } from 'ajv';
 import dotenv from 'dotenv';
 import { chromium } from 'playwright';
 import { PlaywrightAgent } from '@midscene/web/playwright';
+import { createRecoveryHarness } from '../recovery/harness.js';
 import { JsonlLogger } from './logger.js';
 import type { SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
 
@@ -96,8 +97,9 @@ function makeContext(params: {
   browser: SkillContext['browser'];
   browserContext: SkillContext['browserContext'];
   agent: SkillContext['agent'];
+  harness: SkillContext['harness'];
 }): SkillContext {
-  const { manifest, logger, page, browser, browserContext, agent } = params;
+  const { manifest, logger, page, browser, browserContext, agent, harness } = params;
 
   async function screenshot(label: string): Promise<string> {
     const filename = `${label.replace(/[^a-zA-Z0-9_-]+/g, '_')}-${Date.now()}.png`;
@@ -111,6 +113,7 @@ function makeContext(params: {
     browser,
     browserContext,
     agent,
+    harness,
     runId: logger.runId,
     skillName: manifest.name,
     async step<T>(name: string, fn: () => Promise<T>): Promise<T> {
@@ -195,7 +198,12 @@ async function main(): Promise<void> {
   });
   const page = await browserContext.newPage();
   const agent = new PlaywrightAgent(page);
-  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent });
+  const harness = await createRecoveryHarness({
+    page,
+    browserContext,
+    artifactDir: logger.artifactDir,
+  });
+  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent, harness });
 
   try {
     if (!options.skipPreSkills) {
