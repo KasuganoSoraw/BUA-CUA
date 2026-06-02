@@ -1,0 +1,14 @@
+{
+  "name": "mock_recover_step_filter",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Mock recovery-driven step demo without a Playwright primary path.",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "clinical_trials_download_recovery",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Recovery-driven real website demo that searches ClinicalTrials.gov, applies a recruitment status filter, and downloads CSV results.",
+  "entry": "index.ts",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["query"],
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1
+      },
+      "statusFilter": {
+        "type": "string",
+        "default": "Recruiting and not yet recruiting"
+      },
+      "downloadDir": {
+        "type": "string",
+        "default": "downloads"
+      },
+      "downloadFormat": {
+        "type": "string",
+        "enum": ["csv"],
+        "default": "csv"
+      }
+    }
+  }
+}

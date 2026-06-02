@@ -51,6 +51,12 @@ export type SkillContext = {
     midsceneFallback: (error: unknown) => Promise<T>,
     verify?: () => Promise<void>,
   ): Promise<T>;
+  recoverStep(
+    name: string,
+    recoveryOptions: RecoveryOptions,
+    midsceneFallback?: (error: unknown) => Promise<void>,
+    verify?: () => Promise<void>,
+  ): Promise<void>;
   log(type: string, message?: string, data?: Record<string, unknown>, level?: LogLevel): void;
   screenshot(label: string): Promise<string>;
   saveStorageState(path?: string): Promise<void>;

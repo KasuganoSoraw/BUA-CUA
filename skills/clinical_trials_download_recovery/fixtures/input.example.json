@@ -1,0 +1,6 @@
+{
+  "query": "diabetes",
+  "statusFilter": "Recruiting and not yet recruiting",
+  "downloadDir": "downloads",
+  "downloadFormat": "csv"
+}

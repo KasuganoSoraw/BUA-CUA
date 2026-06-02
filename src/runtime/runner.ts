@@ -220,6 +220,56 @@ function makeContext(params: {
         return result as T;
       });
     },
+    async recoverStep(
+      name: string,
+      recoveryOptions: RecoveryOptions,
+      midsceneFallback?: (error: unknown) => Promise<void>,
+      verify?: () => Promise<void>,
+    ): Promise<void> {
+      return this.step(name, async () => {
+        const recoveryResult = await runStepRecovery({
+          skillName: manifest.name,
+          stepName: name,
+          failure: new Error('No Playwright primary was provided for this recovery-driven step'),
+          options: recoveryOptions,
+          harness,
+          log(type, message, data, level) {
+            logger.write({ level: level ?? 'info', type, skill: manifest.name, step: name, message, data });
+          },
+        });
+
+        if (!recoveryResult.ok) {
+          if (!recoveryResult.skipped && verify) {
+            try {
+              logger.info(manifest.name, 'recovery_verify_start', undefined, undefined, name);
+              await verify();
+              logger.info(manifest.name, 'recovery_success_by_verifier', recoveryResult.reason, undefined, name);
+              return;
+            } catch (verifyError) {
+              logger.warn(
+                manifest.name,
+                'recovery_verify_failed',
+                verifyError instanceof Error ? verifyError.message : String(verifyError),
+                undefined,
+                name,
+              );
+            }
+          }
+          logger.warn(manifest.name, 'midscene_fallback_start', recoveryResult.reason, undefined, name);
+          if (!midsceneFallback) {
+            throw new Error(`Recovery step failed: ${recoveryResult.reason ?? 'unknown'}`);
+          }
+          await midsceneFallback(new Error(recoveryResult.reason ?? 'recovery_failed'));
+          logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+        }
+
+        if (verify) {
+          logger.info(manifest.name, 'verify_start', undefined, undefined, name);
+          await verify();
+          logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+        }
+      });
+    },
     log(type: string, message?: string, data?: Record<string, unknown>, level = 'info') {
       logger.write({ level, type, skill: manifest.name, message, data });
     },
@@ -261,6 +311,7 @@ async function main(): Promise<void> {
   const browserContext = await browser.newContext({
     ...(storageState ? { storageState } : {}),
     ignoreHTTPSErrors: true,
+    acceptDownloads: true,
   });
   const page = await browserContext.newPage();
   const agent = new PlaywrightAgent(page);

@@ -11,6 +11,7 @@
 - **Task Skill Generator Guidance**：主要是 `prompts/task_skill_generation.md`，用于指导 agent 生成 Task Skill。它不是自动 LLM 调用器。
 - **Task Skill Runner**：由 `uv run bua-cua run-skill ...` 调用，负责加载、校验、运行 Task Skill。
 - **Task Skill**：位于 `skills/<task_name>/` 的具体网页任务级混编脚本，使用 Playwright + Midscene，并通过 `ctx.withFallback` 做局部 fallback 和日志。
+- **Recovery-driven Task Skill**：没有 Playwright codegen 或稳定 primary path 时，`index.ts` 仍然拆分业务 step，但每个网页操作 step 可以直接调用 `ctx.recoverStep` 交给 step recovery agent 执行。
 
 Runtime 不做 browser-use 式运行时自由规划。它只提供薄执行容器、参数校验、日志、失败截图和浏览器生命周期管理。
 
@@ -185,6 +186,27 @@ await ctx.withFallback(
   },
   async () => {
     // Midscene visual fallback
+  },
+  async () => {
+    // verifier
+  },
+);
+```
+
+没有 Playwright primary path 的真实网站实验可以使用：
+
+```ts
+await ctx.recoverStep(
+  '应用筛选条件',
+  {
+    goal: '在当前搜索结果页应用 Status 筛选',
+    hints: ['只处理当前 step，不重新规划整个任务'],
+    allowedTools: ['screenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+    maxTurns: 8,
+    risk: 'read_only',
+  },
+  async () => {
+    await ctx.agent.aiTap('应用筛选条件');
   },
   async () => {
     // verifier

@@ -175,6 +175,7 @@ export async function runStepRecovery(request: RecoveryRequest): Promise<Recover
   if (client.visionEnabled) {
     try {
       const screenshotPath = await request.harness.screenshot(`recovery-${request.stepName}`);
+      request.log('recovery_initial_screenshot', screenshotPath, { screenshotPath });
       messages.push({
         role: 'user',
         content: [

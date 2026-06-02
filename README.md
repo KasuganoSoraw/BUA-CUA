@@ -174,3 +174,33 @@ uv run bua-cua run-skill arxiv-demo --args .\skills\arxiv-demo\fixtures\input.ex
 ```
 
 执行日志会写入 `runs/`，失败截图会写入 `runs/artifacts/`。
+
+### Recovery-driven 真实网站 demo
+
+`clinical_trials_download_recovery` 用于验证“没有 Playwright codegen，也可以由 `index.ts` 拆解业务步骤，再用 `ctx.recoverStep` 执行每个网页操作 step”。
+
+校验：
+
+```powershell
+uv run bua-cua validate-skill clinical_trials_download_recovery
+npm run typecheck
+```
+
+有浏览器窗口运行：
+
+```powershell
+uv run bua-cua run-skill clinical_trials_download_recovery --args .\skills\clinical_trials_download_recovery\fixtures\input.example.json
+```
+
+无窗口运行：
+
+```powershell
+uv run bua-cua run-skill clinical_trials_download_recovery --args .\skills\clinical_trials_download_recovery\fixtures\input.example.json --headless
+```
+
+该 demo 会访问 `https://clinicaltrials.gov/`，搜索临床研究关键词，应用招募状态筛选，并尝试下载 CSV。下载文件默认写入 `downloads/`。
+
+`ctx.recoverStep` 与 `ctx.withRecovery` 的区别：
+
+- `ctx.withRecovery`：有 Playwright primary，失败后才启动 step recovery agent。
+- `ctx.recoverStep`：没有 Playwright primary，当前 step 直接由 step recovery agent 执行，适合无 codegen 的 recovery-driven Task Skill。
