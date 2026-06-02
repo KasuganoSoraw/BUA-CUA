@@ -45,6 +45,28 @@ git config http.proxy http://127.0.0.1:7897
 git config https.proxy http://127.0.0.1:7897
 ```
 
+### Recovery 模型配置
+
+Step Recovery Agent 使用 OpenAI-compatible Chat Completions 协议。百炼/Qwen 默认配置示例：
+
+```powershell
+$env:BUA_CUA_RECOVERY_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+$env:BUA_CUA_RECOVERY_API_KEY="<your-key>"
+$env:BUA_CUA_RECOVERY_MODEL="qwen3.6-plus"
+$env:BUA_CUA_RECOVERY_VISION="true"
+```
+
+手动文本预检：
+
+```powershell
+curl.exe "$env:BUA_CUA_RECOVERY_BASE_URL/chat/completions" `
+  -H "Authorization: Bearer $env:BUA_CUA_RECOVERY_API_KEY" `
+  -H "Content-Type: application/json" `
+  -d "{\"model\":\"$env:BUA_CUA_RECOVERY_MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"回复 pong\"}]}"
+```
+
+不要把真实 API key 写入代码、README 或提交历史。
+
 ## 常用命令
 
 ### 检查项目
