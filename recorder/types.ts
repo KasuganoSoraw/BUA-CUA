@@ -65,6 +65,16 @@ export type DomEvidence = {
 export type ActionScreenshots = {
   beforeViewport: string;
   afterViewport?: string;
+  annotatedViewport?: string;
+};
+
+export type ScreenshotAnnotation = {
+  kind: 'pointer-marker';
+  screenshot: string;
+  coordinateSpace: 'viewport';
+  x: number;
+  y: number;
+  note: string;
 };
 
 export type StateDelta = {
@@ -93,6 +103,7 @@ export type ActionRecord = {
   selectorCandidates: SelectorCandidate[];
   domEvidence: DomEvidence;
   screenshots: ActionScreenshots;
+  annotation?: ScreenshotAnnotation;
   stateDelta?: StateDelta;
 };
 

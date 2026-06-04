@@ -159,6 +159,65 @@ async function safeScreenshot(page: Page, outputPath: string): Promise<boolean> 
   }
 }
 
+async function safeAnnotatedScreenshot(
+  page: Page,
+  outputPath: string,
+  pointer: PointerEvidence,
+): Promise<boolean> {
+  try {
+    await page.evaluate(({ x, y }) => {
+      const existing = document.getElementById('__bua_cua_pointer_marker__');
+      existing?.remove();
+
+      const root = document.createElement('div');
+      root.id = '__bua_cua_pointer_marker__';
+      root.setAttribute('data-bua-cua-artificial-marker', 'true');
+      root.style.position = 'fixed';
+      root.style.left = '0';
+      root.style.top = '0';
+      root.style.width = '0';
+      root.style.height = '0';
+      root.style.zIndex = '2147483647';
+      root.style.pointerEvents = 'none';
+
+      const circle = document.createElement('div');
+      circle.style.position = 'fixed';
+      circle.style.left = `${x - 22}px`;
+      circle.style.top = `${y - 22}px`;
+      circle.style.width = '44px';
+      circle.style.height = '44px';
+      circle.style.border = '4px solid #ff2bd6';
+      circle.style.borderRadius = '999px';
+      circle.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.9), 0 0 18px rgba(255,43,214,0.85)';
+      circle.style.background = 'rgba(255,43,214,0.08)';
+
+      const cursor = document.createElement('div');
+      cursor.style.position = 'fixed';
+      cursor.style.left = `${x + 10}px`;
+      cursor.style.top = `${y + 10}px`;
+      cursor.style.width = '0';
+      cursor.style.height = '0';
+      cursor.style.borderLeft = '13px solid #111827';
+      cursor.style.borderTop = '9px solid transparent';
+      cursor.style.borderBottom = '9px solid transparent';
+      cursor.style.transform = 'rotate(38deg)';
+      cursor.style.filter = 'drop-shadow(0 0 2px white) drop-shadow(0 0 2px white)';
+
+      root.append(circle, cursor);
+      document.documentElement.append(root);
+    }, pointer);
+
+    await page.screenshot({ path: outputPath, fullPage: false, timeout: 10000 });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    await page.evaluate(() => {
+      document.getElementById('__bua_cua_pointer_marker__')?.remove();
+    }).catch(() => undefined);
+  }
+}
+
 async function installRecorderScript(page: Page): Promise<void> {
   const script = () => {
     type AnyRecord = Record<string, unknown>;
@@ -437,6 +496,10 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     const afterSnapshot = await safeSnapshot(page);
     const afterScreenshot = path.join(screenshotsDir, `${id}-after.png`);
     await safeScreenshot(page, afterScreenshot);
+    const annotatedScreenshot = payload.pointer ? path.join(screenshotsDir, `${id}-annotated.png`) : undefined;
+    if (annotatedScreenshot && payload.pointer) {
+      await safeAnnotatedScreenshot(page, annotatedScreenshot, payload.pointer);
+    }
 
     const action: ActionRecord = {
       id,
@@ -454,7 +517,20 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
       screenshots: {
         beforeViewport: relativeToRecording(recordingDir, beforeScreenshot),
         afterViewport: relativeToRecording(recordingDir, afterScreenshot),
+        annotatedViewport: annotatedScreenshot ? relativeToRecording(recordingDir, annotatedScreenshot) : undefined,
       },
+      annotation:
+        annotatedScreenshot && payload.pointer
+          ? {
+              kind: 'pointer-marker',
+              screenshot: relativeToRecording(recordingDir, annotatedScreenshot),
+              coordinateSpace: 'viewport',
+              x: payload.pointer.x,
+              y: payload.pointer.y,
+              note:
+                'The magenta circle and cursor marker were added by BUA-CUA recorder to indicate the human operation point. They are not part of the original web page UI.',
+            }
+          : undefined,
       stateDelta: computeStateDelta(beforeSnapshot, afterSnapshot),
     };
     const actionFile = path.join(actionsDir, `${id}.json`);

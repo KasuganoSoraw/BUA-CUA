@@ -128,7 +128,10 @@ inputs/arxiv-demo/recording/
   actions/action-001.json
   screenshots/action-001-before.png
   screenshots/action-001-after.png
+  screenshots/action-001-annotated.png
 ```
+
+对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片中的品红色圆圈和光标标记是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
 
 当前第一版可能需要录制两次：一次使用官方 `npx playwright codegen` 生成脚本轨迹，一次使用 `uv run bua-cua record ...` 生成证据轨迹。若两次录制存在细微差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 仅作为 verifier、locator 和 recovery 的辅助证据。
 
