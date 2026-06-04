@@ -8,6 +8,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -187,6 +188,84 @@ def command_record(args: argparse.Namespace) -> int:
                 return process.wait()
 
 
+def command_trace_codegen(args: argparse.Namespace) -> int:
+    target = ROOT / "inputs" / args.task
+    codegen = target / "codegen.spec.ts"
+    if not codegen.exists():
+        print(f"ERROR: Missing codegen script: {codegen}", file=sys.stderr)
+        return 1
+
+    playwright = ROOT / "node_modules" / ".bin" / ("playwright.cmd" if sys.platform == "win32" else "playwright")
+    if not playwright.exists():
+        print("ERROR: Could not find local Playwright CLI. Run npm install first.", file=sys.stderr)
+        return 1
+    tsc = ROOT / "node_modules" / ".bin" / ("tsc.cmd" if sys.platform == "win32" else "tsc")
+    if not tsc.exists():
+        print("ERROR: Could not find local TypeScript compiler. Run npm install first.", file=sys.stderr)
+        return 1
+
+    trace_dir = target / "trace"
+    results_dir = trace_dir / "test-results"
+    compiled_dir = trace_dir / "compiled"
+    trace_zip = trace_dir / "trace.zip"
+    trace_dir.mkdir(parents=True, exist_ok=True)
+    if results_dir.exists():
+        shutil.rmtree(results_dir)
+    if compiled_dir.exists():
+        shutil.rmtree(compiled_dir)
+    if trace_zip.exists():
+        backup = trace_dir / f"trace-{int(time.time())}.zip"
+        shutil.move(trace_zip, backup)
+        print(f"Existing trace backed up: {backup}")
+
+    compile_cmd = [
+        str(tsc),
+        str(codegen.resolve()),
+        "--outDir",
+        str(compiled_dir.resolve()),
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--target",
+        "ES2022",
+        "--skipLibCheck",
+    ]
+    compiled = subprocess.run(compile_cmd, cwd=ROOT)
+    if compiled.returncode != 0:
+        return compiled.returncode
+
+    compiled_script = compiled_dir / codegen.with_suffix(".js").name
+    if not compiled_script.exists():
+        print(f"ERROR: Compiled script not found: {compiled_script}", file=sys.stderr)
+        return 1
+
+    cmd = [
+        str(playwright),
+        "test",
+        compiled_script.relative_to(ROOT).as_posix(),
+        "--trace",
+        "on",
+        "--output",
+        str(results_dir.resolve()),
+    ]
+    if args.headed:
+        cmd.append("--headed")
+    if args.project:
+        cmd.extend(["--project", args.project])
+
+    completed = subprocess.run(cmd, cwd=ROOT)
+    traces = sorted(results_dir.rglob("trace.zip"), key=lambda item: item.stat().st_mtime, reverse=True)
+    if not traces:
+        print(f"ERROR: No trace.zip found under {results_dir}", file=sys.stderr)
+        return completed.returncode or 1
+
+    shutil.copy2(traces[0], trace_zip)
+    print(f"Trace saved: {trace_zip}")
+    print(f"Open with: npx playwright show-trace {trace_zip}")
+    return completed.returncode
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="BUA-CUA Task Skill control CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -212,6 +291,12 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument("--user-data-dir", help="optional persistent browser profile directory")
     record.add_argument("--channel", help="optional Playwright browser channel, for example chrome or msedge")
     record.set_defaults(func=command_record)
+
+    trace = subparsers.add_parser("trace-codegen", help="run an input codegen script with Playwright trace enabled")
+    trace.add_argument("task")
+    trace.add_argument("--headed", action="store_true", help="run browser headed")
+    trace.add_argument("--project", help="optional Playwright project name")
+    trace.set_defaults(func=command_trace_codegen)
 
     return parser
 

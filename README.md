@@ -168,6 +168,27 @@ npx playwright test ".playwright-tmp/codegen.spec.js" --headed
 npx playwright test ".playwright-tmp/codegen.spec.js"
 ```
 
+### 为 codegen 脚本生成 Playwright trace
+
+`trace-codegen` 会运行 `inputs/<task>/codegen.spec.ts`，开启 Playwright trace，并把最新 `trace.zip` 保存到 `inputs/<task>/trace/trace.zip`。该 trace 用于补充 codegen 没有显式写出的 before/action/after 证据。
+即使 codegen 脚本中途失败，只要 Playwright 产生了 trace，命令也会保留最新 `trace.zip` 供排查。
+
+```powershell
+uv run bua-cua trace-codegen arxiv-demo
+```
+
+有窗口运行：
+
+```powershell
+uv run bua-cua trace-codegen arxiv-demo --headed
+```
+
+查看 trace：
+
+```powershell
+npx playwright show-trace .\inputs\arxiv-demo\trace\trace.zip
+```
+
 ### 生成 Task Skill
 
 当前 MVP 没有自动 LLM 生成命令。生成 Task Skill 时，让 agent 同时读取：
@@ -177,6 +198,7 @@ prompts/task_skill_generation.md
 inputs/<task>/intent.md
 inputs/<task>/codegen.spec.ts
 inputs/<task>/recording/recording.json  # 可选 raw evidence
+inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
 ```
 
 并生成：

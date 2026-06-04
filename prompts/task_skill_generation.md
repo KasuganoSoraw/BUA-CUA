@@ -7,6 +7,7 @@
 1. 用户的自然语言任务描述。
 2. 一段由人工成功示范录制得到的 Playwright codegen 脚本。
 3. 可选的 enhanced recorder raw evidence，例如 `inputs/<task>/recording/recording.json`、`actions/*.json` 和截图。
+4. 可选的 Playwright trace evidence，例如 `inputs/<task>/trace/trace.zip`。
 
 你必须一次性输出且只输出三个文件的内容：`skill.json`、`SKILL.md`、`index.ts`。
 
@@ -52,6 +53,7 @@ await ctx.withFallback(
 - 如果提供了 enhanced recorder raw evidence，应把它作为辅助证据使用，不替代 codegen 的业务顺序。
 - 使用 raw evidence 时应优先关注当前步骤相关的 before/after 状态变化、局部 DOM evidence、selector candidates 和截图；不要把全部 evidence 无差别塞入单个步骤。
 - 如果截图文件名或 action 记录中出现 `annotatedViewport` / `*-annotated.png`，该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 BUA-CUA recorder 后处理添加的，用于指示人类操作位置，不是网页自身 UI。不得把该标记当成页面元素或业务控件。
+- 如果提供了 Playwright trace，应把它用于理解 codegen action 的 before/action/after 状态、locator 实际目标、页面跳转和 verifier 候选；trace 不替代运行时 fallback，也不意味着页面变化后无需 recovery。
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；
