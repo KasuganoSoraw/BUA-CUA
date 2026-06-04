@@ -35,6 +35,20 @@ def load_json(path: Path) -> Any:
         return json.load(file)
 
 
+def tsx_args(entry: str) -> list[str] | None:
+    node = shutil.which("node.exe") or shutil.which("node")
+    if not node:
+        print("ERROR: Could not find node. Install Node.js and run npm install first.", file=sys.stderr)
+        return None
+
+    tsx_cli = ROOT / "node_modules" / "tsx" / "dist" / "cli.mjs"
+    if not tsx_cli.exists():
+        print("ERROR: Could not find local tsx. Run npm install first.", file=sys.stderr)
+        return None
+
+    return [node, str(tsx_cli), entry]
+
+
 def command_scaffold_input(args: argparse.Namespace) -> int:
     target = ROOT / "inputs" / args.task
     target.mkdir(parents=True, exist_ok=True)
@@ -113,15 +127,12 @@ def command_run_skill(args: argparse.Namespace) -> int:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
 
-    npx = shutil.which("npx.cmd") or shutil.which("npx")
-    if not npx:
-        print("ERROR: Could not find npx. Install Node.js and run npm install first.", file=sys.stderr)
+    base_args = tsx_args("src/runtime/runner.ts")
+    if base_args is None:
         return 1
 
     node_args = [
-        npx,
-        "tsx",
-        "src/runtime/runner.ts",
+        *base_args,
         "--skill",
         str(path),
         "--args",
@@ -142,15 +153,12 @@ def command_record(args: argparse.Namespace) -> int:
     recording_dir = target / "recording"
     recording_dir.mkdir(parents=True, exist_ok=True)
 
-    npx = shutil.which("npx.cmd") or shutil.which("npx")
-    if not npx:
-        print("ERROR: Could not find npx. Install Node.js and run npm install first.", file=sys.stderr)
+    base_args = tsx_args("recorder/index.ts")
+    if base_args is None:
         return 1
 
     node_args = [
-        npx,
-        "tsx",
-        "recorder/index.ts",
+        *base_args,
         "--task",
         args.task,
         "--url",
@@ -159,8 +167,20 @@ def command_record(args: argparse.Namespace) -> int:
         str(recording_dir.resolve()),
     ]
 
-    completed = subprocess.run(node_args, cwd=ROOT)
-    return completed.returncode
+    process = subprocess.Popen(node_args, cwd=ROOT)
+    try:
+        return process.wait()
+    except KeyboardInterrupt:
+        print("\nRecorder interrupted. Waiting briefly for recording files to flush...", file=sys.stderr)
+        try:
+            return process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.terminate()
+            try:
+                return process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                return process.wait()
 
 
 def build_parser() -> argparse.ArgumentParser:

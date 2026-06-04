@@ -393,6 +393,7 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
   };
   let actionCount = 0;
   let isClosing = false;
+  let finishPromise: Promise<void> | undefined;
   const pending = new Set<Promise<void>>();
 
   const saveIndex = async () => {
@@ -467,31 +468,44 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
       await installRecorderScript(page).catch(() => undefined);
     }
   });
-  page.on('close', () => {
-    isClosing = true;
-  });
-
   console.log(`[recorder] Opened ${args.url}`);
   console.log('[recorder] Operate the browser manually. Close the browser or press Ctrl+C to finish.');
   await page.goto(args.url, { waitUntil: 'domcontentloaded' });
 
   const finish = async () => {
+    if (finishPromise) {
+      return finishPromise;
+    }
     isClosing = true;
-    await Promise.allSettled(Array.from(pending));
-    await saveIndex();
-    await browser.close().catch(() => undefined);
-    console.log(`[recorder] Recording saved to ${recordingDir}`);
+    finishPromise = (async () => {
+      await Promise.allSettled(Array.from(pending));
+      await saveIndex();
+      await browser.close().catch(() => undefined);
+      console.log(`[recorder] Recording saved to ${recordingDir}`);
+    })();
+    return finishPromise;
   };
 
   process.once('SIGINT', () => {
     void finish().then(() => process.exit(0));
   });
 
-  await new Promise<void>((resolve) => {
-    browser.on('disconnected', () => resolve());
+  page.once('close', () => {
+    void finish();
   });
-  await Promise.allSettled(Array.from(pending));
-  await saveIndex();
+  context.once('close', () => {
+    void finish();
+  });
+  browser.once('disconnected', () => {
+    void finish();
+  });
+  await new Promise<void>((resolve) => {
+    const done = () => resolve();
+    page.once('close', done);
+    context.once('close', done);
+    browser.once('disconnected', done);
+  });
+  await finish();
 }
 
 const args = parseArgs(process.argv.slice(2));
