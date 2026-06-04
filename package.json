@@ -6,6 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "run-skill": "tsx src/runtime/runner.ts",
+    "record": "tsx recorder/index.ts",
     "smoke": "tsx src/runtime/runner.ts --skill mock_query_eline_service_info --args skills/mock_query_eline_service_info/fixtures/input.example.json --headless"
   },
   "devDependencies": {

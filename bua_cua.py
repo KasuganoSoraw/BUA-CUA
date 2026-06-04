@@ -136,6 +136,33 @@ def command_run_skill(args: argparse.Namespace) -> int:
     return completed.returncode
 
 
+def command_record(args: argparse.Namespace) -> int:
+    target = ROOT / "inputs" / args.task
+    target.mkdir(parents=True, exist_ok=True)
+    recording_dir = target / "recording"
+    recording_dir.mkdir(parents=True, exist_ok=True)
+
+    npx = shutil.which("npx.cmd") or shutil.which("npx")
+    if not npx:
+        print("ERROR: Could not find npx. Install Node.js and run npm install first.", file=sys.stderr)
+        return 1
+
+    node_args = [
+        npx,
+        "tsx",
+        "recorder/index.ts",
+        "--task",
+        args.task,
+        "--url",
+        args.url,
+        "--output",
+        str(recording_dir.resolve()),
+    ]
+
+    completed = subprocess.run(node_args, cwd=ROOT)
+    return completed.returncode
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="BUA-CUA Task Skill control CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -154,6 +181,11 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--headless", action="store_true", help="run browser headless")
     run.add_argument("--skip-pre-skills", action="store_true")
     run.set_defaults(func=command_run_skill)
+
+    record = subparsers.add_parser("record", help="record raw browser evidence for an input pack")
+    record.add_argument("task")
+    record.add_argument("--url", required=True, help="start URL for headed enhanced recording")
+    record.set_defaults(func=command_record)
 
     return parser
 
