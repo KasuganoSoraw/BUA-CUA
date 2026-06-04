@@ -380,8 +380,12 @@ async function installRecorderScript(page: Page): Promise<void> {
     }, true);
   };
 
-  await page.addInitScript(script);
-  await page.evaluate(script).catch(() => undefined);
+  const content = `(() => {
+    const __name = (target) => target;
+    (${script.toString()})();
+  })();`;
+  await page.addInitScript({ content });
+  await page.addScriptTag({ content }).catch(() => undefined);
 }
 
 async function runRecorder(args: RecorderArgs): Promise<void> {
