@@ -189,6 +189,24 @@ uv run bua-cua trace-codegen arxiv-demo --headed
 npx playwright show-trace .\inputs\arxiv-demo\trace\trace.zip
 ```
 
+### 提取 trace 工程证据
+
+`summarize-trace` 不调用模型，只从 Playwright `trace.zip` 中提取可审计 facts，包括 action 顺序、locator、源码行、before/action/after snapshot id、精选截图、resolved HTML、日志、失败信息和 coverage。
+
+```powershell
+uv run bua-cua summarize-trace arxiv-demo
+```
+
+输出：
+
+```text
+inputs/arxiv-demo/trace/
+  trace_evidence.json
+  evidence-images/
+```
+
+`trace_evidence.json` 是后续让模型生成自然语言步骤、verifier 和 recovery hints 的事实输入。模型生成的语义描述必须引用其中的 action id / snapshot / frame evidence。
+
 ### 生成 Task Skill
 
 当前 MVP 没有自动 LLM 生成命令。生成 Task Skill 时，让 agent 同时读取：
@@ -199,6 +217,7 @@ inputs/<task>/intent.md
 inputs/<task>/codegen.spec.ts
 inputs/<task>/recording/recording.json  # 可选 raw evidence
 inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
+inputs/<task>/trace/trace_evidence.json # 可选 trace facts summary
 ```
 
 并生成：

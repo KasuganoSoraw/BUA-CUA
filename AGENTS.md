@@ -170,13 +170,29 @@ npx playwright show-trace .\inputs\<task_name>\trace\trace.zip
 `trace.zip` 用于补充 codegen 没有显式写出的 before/action/after 证据。它不替代 Task Skill 的 verifier 或 fallback。
 即使 codegen 脚本中途失败，只要 Playwright 产生了 trace，`trace-codegen` 也会保留最新 `trace.zip` 供排查。
 
-6. 可选填写人工步骤说明：
+6. 可选提取 trace 工程证据：
+
+```powershell
+uv run bua-cua summarize-trace <task_name>
+```
+
+输出：
+
+```text
+inputs/<task_name>/trace/
+  trace_evidence.json
+  evidence-images/
+```
+
+`trace_evidence.json` 只包含工程提取的 facts，不包含模型生成的语义步骤。后续模型生成自然语言步骤、verifier 和 recovery hints 时，必须引用其中的 action id / snapshot / frame evidence。
+
+7. 可选填写人工步骤说明：
 
 ```text
 inputs/<task_name>/steps.md
 ```
 
-7. 使用 `prompts/task_skill_generation.md` 指导 agent 生成 Task Skill。
+8. 使用 `prompts/task_skill_generation.md` 指导 agent 生成 Task Skill。
 
 生成目标目录：
 
@@ -189,7 +205,7 @@ skills/<task_name>/
   recordings/codegen.spec.ts
 ```
 
-8. 人工审查生成结果。
+9. 人工审查生成结果。
 
 重点检查：
 
@@ -201,14 +217,14 @@ skills/<task_name>/
 - 是否没有硬编码模型密钥。
 - 是否没有未经确认的危险写入操作。
 
-9. 校验 Task Skill：
+10. 校验 Task Skill：
 
 ```powershell
 uv run bua-cua validate-skill <task_name>
 npm run typecheck
 ```
 
-10. 本地 headed 执行真实 Task Skill：
+11. 本地 headed 执行真实 Task Skill：
 
 ```powershell
 uv run bua-cua run-skill <task_name> --args .\skills\<task_name>\fixtures\input.example.json
@@ -277,6 +293,7 @@ await ctx.recoverStep(
 uv run bua-cua scaffold-input <task_name>
 uv run bua-cua record <task_name> --url <start_url>
 uv run bua-cua trace-codegen <task_name>
+uv run bua-cua summarize-trace <task_name>
 uv run bua-cua validate-skill <task_name>
 uv run bua-cua run-skill <task_name> --args .\skills\<task_name>\fixtures\input.example.json
 npm run typecheck
