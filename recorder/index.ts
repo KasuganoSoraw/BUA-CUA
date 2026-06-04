@@ -172,6 +172,7 @@ async function installRecorderScript(page: Page): Promise<void> {
     }
     win.__buaCuaRecorderInstalled = true;
     win.__buaCuaInputTimers = new WeakMap<Element, number>();
+    console.info('[bua-cua-recorder] installed');
 
     const normalize = (value: string | null | undefined) => (value || '').replace(/\s+/g, ' ').trim();
     const rectOf = (element: Element | null) => {
@@ -320,21 +321,36 @@ async function installRecorderScript(page: Page): Promise<void> {
     };
     const stackAt = (x: number, y: number) => document.elementsFromPoint(x, y).slice(0, 8).map(elementInfo).filter(Boolean);
     const dispatch = (type: string, event: Event, pointer?: { x: number; y: number }) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const stack = pointer ? stackAt(pointer.x, pointer.y) : [elementInfo(target)].filter(Boolean);
-      const contexts = contextFor(target);
-      void win.__buaCuaRecordAction?.({
-        type,
-        timestamp: new Date().toISOString(),
-        pointer: pointer ? { x: pointer.x, y: pointer.y, coordinateSpace: 'viewport' } : undefined,
-        target: elementInfo(target),
-        selectorCandidates: selectorCandidates(target),
-        domEvidence: {
-          elementStack: stack,
-          nearbyText: nearbyText(target),
-          ...contexts,
-        },
-      });
+      const timestamp = new Date().toISOString();
+      try {
+        const target = event.target instanceof Element ? event.target : null;
+        const stack = pointer ? stackAt(pointer.x, pointer.y) : [elementInfo(target)].filter(Boolean);
+        const contexts = contextFor(target);
+        void win.__buaCuaRecordAction?.({
+          type,
+          timestamp,
+          pointer: pointer ? { x: pointer.x, y: pointer.y, coordinateSpace: 'viewport' } : undefined,
+          target: elementInfo(target),
+          selectorCandidates: selectorCandidates(target),
+          domEvidence: {
+            elementStack: stack,
+            nearbyText: nearbyText(target),
+            ...contexts,
+          },
+        });
+      } catch (error) {
+        console.warn('[bua-cua-recorder] dispatch evidence failed', error);
+        void win.__buaCuaRecordAction?.({
+          type,
+          timestamp,
+          pointer: pointer ? { x: pointer.x, y: pointer.y, coordinateSpace: 'viewport' } : undefined,
+          selectorCandidates: [],
+          domEvidence: {
+            elementStack: [],
+            nearbyText: [],
+          },
+        });
+      }
     };
 
     document.addEventListener('click', (event) => {
@@ -455,11 +471,22 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
   };
 
   await page.exposeBinding('__buaCuaRecordAction', (_source, payload: BrowserEventPayload) => {
+    console.log(`[recorder] event ${payload.type} queued`);
     const task = recordPayload(payload).catch((error: unknown) => {
       console.error('[recorder] failed to record action:', error);
     });
     pending.add(task);
     task.finally(() => pending.delete(task));
+  });
+
+  page.on('console', (message) => {
+    const text = message.text();
+    if (text.includes('bua-cua-recorder')) {
+      console.log(`[page:${message.type()}] ${text}`);
+    }
+  });
+  page.on('pageerror', (error) => {
+    console.error(`[page:error] ${error.message}`);
   });
 
   await installRecorderScript(page);
@@ -471,6 +498,22 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
   console.log(`[recorder] Opened ${args.url}`);
   console.log('[recorder] Operate the browser manually. Close the browser or press Ctrl+C to finish.');
   await page.goto(args.url, { waitUntil: 'domcontentloaded' });
+  await installRecorderScript(page);
+  const installed = await page.evaluate(() => {
+    const win = window as typeof window & {
+      __buaCuaRecorderInstalled?: boolean;
+      __buaCuaRecordAction?: unknown;
+    };
+    return {
+      scriptInstalled: Boolean(win.__buaCuaRecorderInstalled),
+      bindingInstalled: typeof win.__buaCuaRecordAction === 'function',
+    };
+  }).catch(() => ({ scriptInstalled: false, bindingInstalled: false }));
+  console.log(
+    `[recorder] page hook status: script=${installed.scriptInstalled ? 'ok' : 'missing'} binding=${
+      installed.bindingInstalled ? 'ok' : 'missing'
+    }`,
+  );
 
   const finish = async () => {
     if (finishPromise) {
