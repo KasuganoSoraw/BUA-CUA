@@ -228,20 +228,7 @@ async function safeAnnotatedScreenshot(
       dot.style.background = '#ff1744';
       dot.style.boxShadow = '0 0 0 2px white';
 
-      const cursorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      cursorSvg.setAttribute('viewBox', '0 0 32 42');
-      cursorSvg.setAttribute('width', '32');
-      cursorSvg.setAttribute('height', '42');
-      cursorSvg.style.position = 'fixed';
-      cursorSvg.style.left = `${x + 8}px`;
-      cursorSvg.style.top = `${y + 8}px`;
-      cursorSvg.style.filter = 'drop-shadow(0 0 2px white) drop-shadow(0 2px 3px rgba(0,0,0,0.35))';
-      cursorSvg.innerHTML = [
-        '<path d="M2 2 L2 34 L10.5 25 L16 39 L22 36.5 L16.5 23.5 L29 23.5 Z" fill="#111827" stroke="white" stroke-width="2" />',
-        '<path d="M2 2 L2 34 L10.5 25 L16 39" fill="none" stroke="#111827" stroke-width="1" />',
-      ].join('');
-
-      root.append(target, horizontal, vertical, dot, cursorSvg);
+      root.append(target, horizontal, vertical, dot);
       document.documentElement.append(root);
     }, pointer);
 
@@ -256,6 +243,16 @@ async function safeAnnotatedScreenshot(
   }
 }
 
+async function waitForActionResult(page: Page, urlBefore: string): Promise<void> {
+  await Promise.race([
+    page.waitForURL((url) => url.toString() !== urlBefore, { timeout: 5000 }).catch(() => undefined),
+    page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => undefined),
+    page.waitForTimeout(900),
+  ]);
+  await page.waitForLoadState('load', { timeout: 5000 }).catch(() => undefined);
+  await page.waitForTimeout(500).catch(() => undefined);
+}
+
 async function installRecorderScript(page: Page): Promise<void> {
   const script = () => {
     type AnyRecord = Record<string, unknown>;
@@ -263,12 +260,14 @@ async function installRecorderScript(page: Page): Promise<void> {
       __buaCuaRecorderInstalled?: boolean;
       __buaCuaRecordAction?: (payload: AnyRecord) => Promise<void>;
       __buaCuaInputTimers?: WeakMap<Element, number>;
+      __buaCuaInputLastValues?: WeakMap<Element, string>;
     };
     if (win.__buaCuaRecorderInstalled) {
       return;
     }
     win.__buaCuaRecorderInstalled = true;
     win.__buaCuaInputTimers = new WeakMap<Element, number>();
+    win.__buaCuaInputLastValues = new WeakMap<Element, string>();
     console.info('[bua-cua-recorder] installed');
 
     const normalize = (value: string | null | undefined) => (value || '').replace(/\s+/g, ' ').trim();
@@ -450,7 +449,10 @@ async function installRecorderScript(page: Page): Promise<void> {
       }
     };
 
-    document.addEventListener('click', (event) => {
+    document.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) {
+        return;
+      }
       dispatch('click', event, { x: event.clientX, y: event.clientY });
     }, true);
     document.addEventListener('input', (event) => {
@@ -462,7 +464,16 @@ async function installRecorderScript(page: Page): Promise<void> {
       if (existing) {
         window.clearTimeout(existing);
       }
-      const timer = window.setTimeout(() => dispatch('input', event), 500);
+      const timer = window.setTimeout(() => {
+        const value = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
+          ? target.value
+          : normalize(target.textContent);
+        if (win.__buaCuaInputLastValues?.get(target) === value) {
+          return;
+        }
+        win.__buaCuaInputLastValues?.set(target, value);
+        dispatch('input', event);
+      }, 1500);
       win.__buaCuaInputTimers?.set(target, timer);
     }, true);
     document.addEventListener('change', (event) => {
@@ -546,17 +557,16 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     const beforeSnapshot = await safeSnapshot(sourcePage);
     const beforeScreenshot = path.join(screenshotsDir, `${id}-before.png`);
     await safeScreenshot(sourcePage, beforeScreenshot);
-
-    await sourcePage.waitForLoadState('domcontentloaded', { timeout: 2500 }).catch(() => undefined);
-    await sourcePage.waitForTimeout(700).catch(() => undefined);
-
-    const afterSnapshot = await safeSnapshot(sourcePage);
-    const afterScreenshot = path.join(screenshotsDir, `${id}-after.png`);
-    await safeScreenshot(sourcePage, afterScreenshot);
     const annotatedScreenshot = payload.pointer ? path.join(screenshotsDir, `${id}-annotated.png`) : undefined;
     if (annotatedScreenshot && payload.pointer) {
       await safeAnnotatedScreenshot(sourcePage, annotatedScreenshot, payload.pointer);
     }
+
+    await waitForActionResult(sourcePage, beforeSnapshot.url);
+
+    const afterSnapshot = await safeSnapshot(sourcePage);
+    const afterScreenshot = path.join(screenshotsDir, `${id}-after.png`);
+    await safeScreenshot(sourcePage, afterScreenshot);
 
     const action: ActionRecord = {
       id,
@@ -585,7 +595,7 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
               x: payload.pointer.x,
               y: payload.pointer.y,
               note:
-                'The magenta circle and cursor marker were added by BUA-CUA recorder to indicate the human operation point. They are not part of the original web page UI.',
+                'The red crosshair marker was added by BUA-CUA recorder on the pre-action viewport screenshot to indicate the human operation point. It is not part of the original web page UI.',
             }
           : undefined,
       stateDelta: computeStateDelta(beforeSnapshot, afterSnapshot),

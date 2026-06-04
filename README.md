@@ -139,7 +139,7 @@ inputs/arxiv-demo/recording/
   screenshots/action-001-annotated.png
 ```
 
-对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片中的红色十字、中心圆点和鼠标指针标记是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
+对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
 
 如果 recorder 比日常浏览器更容易触发安全验证，通常是因为默认 Playwright 使用全新的临时 profile，没有历史 cookie、登录态和长期行为记录，也可能被站点识别为自动化浏览器。优先尝试 `--user-data-dir` 和 `--channel chrome`。
 

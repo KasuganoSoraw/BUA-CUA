@@ -143,7 +143,7 @@ inputs/<task_name>/recording/
   screenshots/action-001-annotated.png
 ```
 
-对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片中的红色十字、中心圆点和鼠标指针标记是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。agent 使用截图时必须明确这一点，不要把标记当作页面元素。
+对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。agent 使用截图时必须明确这一点，不要把标记当作页面元素。
 
 第一版 enhanced recorder 不替代官方 Playwright codegen，可能需要单独录制一次。若两次录制存在差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 只作为 verifier、locator 和 step recovery 的辅助证据。
 
