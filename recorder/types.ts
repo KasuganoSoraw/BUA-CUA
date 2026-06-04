@@ -114,6 +114,7 @@ export type RecordingIndexAction = {
   actionFile: string;
   beforeViewport: string;
   afterViewport?: string;
+  annotatedViewport?: string;
   urlBefore: string;
   urlAfter?: string;
   targetSummary?: string;

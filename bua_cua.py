@@ -166,6 +166,10 @@ def command_record(args: argparse.Namespace) -> int:
         "--output",
         str(recording_dir.resolve()),
     ]
+    if args.user_data_dir:
+        node_args.extend(["--user-data-dir", str(Path(args.user_data_dir).resolve())])
+    if args.channel:
+        node_args.extend(["--channel", args.channel])
 
     process = subprocess.Popen(node_args, cwd=ROOT)
     try:
@@ -205,6 +209,8 @@ def build_parser() -> argparse.ArgumentParser:
     record = subparsers.add_parser("record", help="record raw browser evidence for an input pack")
     record.add_argument("task")
     record.add_argument("--url", required=True, help="start URL for headed enhanced recording")
+    record.add_argument("--user-data-dir", help="optional persistent browser profile directory")
+    record.add_argument("--channel", help="optional Playwright browser channel, for example chrome or msedge")
     record.set_defaults(func=command_record)
 
     return parser

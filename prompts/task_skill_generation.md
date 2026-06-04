@@ -51,7 +51,7 @@ await ctx.withFallback(
 - 保留 codegen 脚本中体现出来的人类示范业务顺序。
 - 如果提供了 enhanced recorder raw evidence，应把它作为辅助证据使用，不替代 codegen 的业务顺序。
 - 使用 raw evidence 时应优先关注当前步骤相关的 before/after 状态变化、局部 DOM evidence、selector candidates 和截图；不要把全部 evidence 无差别塞入单个步骤。
-- 如果截图文件名或 action 记录中出现 `annotatedViewport` / `*-annotated.png`，其中的品红色圆圈和光标标记是 BUA-CUA recorder 后处理添加的，用于指示人类操作位置，不是网页自身 UI。不得把该标记当成页面元素或业务控件。
+- 如果截图文件名或 action 记录中出现 `annotatedViewport` / `*-annotated.png`，其中的红色十字、中心圆点和鼠标指针标记是 BUA-CUA recorder 后处理添加的，用于指示人类操作位置，不是网页自身 UI。不得把该标记当成页面元素或业务控件。
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；

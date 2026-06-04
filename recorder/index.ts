@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium, type Browser, type Page } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import type {
   ActionRecord,
   DomEvidence,
@@ -17,6 +17,8 @@ type RecorderArgs = {
   task: string;
   url: string;
   output: string;
+  userDataDir?: string;
+  channel?: string;
 };
 
 type BrowserEventPayload = {
@@ -49,6 +51,10 @@ function parseArgs(argv: string[]): RecorderArgs {
       parsed.url = argv[++index];
     } else if (token === '--output') {
       parsed.output = argv[++index];
+    } else if (token === '--user-data-dir') {
+      parsed.userDataDir = argv[++index];
+    } else if (token === '--channel') {
+      parsed.channel = argv[++index];
     }
   }
 
@@ -60,6 +66,8 @@ function parseArgs(argv: string[]): RecorderArgs {
     task: parsed.task,
     url: parsed.url,
     output: parsed.output ?? path.join(rootDir, 'inputs', parsed.task, 'recording'),
+    userDataDir: parsed.userDataDir,
+    channel: parsed.channel ?? process.env.BUA_CUA_RECORDER_CHANNEL,
   };
 }
 
@@ -180,30 +188,60 @@ async function safeAnnotatedScreenshot(
       root.style.zIndex = '2147483647';
       root.style.pointerEvents = 'none';
 
-      const circle = document.createElement('div');
-      circle.style.position = 'fixed';
-      circle.style.left = `${x - 22}px`;
-      circle.style.top = `${y - 22}px`;
-      circle.style.width = '44px';
-      circle.style.height = '44px';
-      circle.style.border = '4px solid #ff2bd6';
-      circle.style.borderRadius = '999px';
-      circle.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.9), 0 0 18px rgba(255,43,214,0.85)';
-      circle.style.background = 'rgba(255,43,214,0.08)';
+      const target = document.createElement('div');
+      target.style.position = 'fixed';
+      target.style.left = `${x - 18}px`;
+      target.style.top = `${y - 18}px`;
+      target.style.width = '36px';
+      target.style.height = '36px';
+      target.style.border = '4px solid #ff1744';
+      target.style.borderRadius = '999px';
+      target.style.boxSizing = 'border-box';
+      target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.95), 0 0 18px rgba(255,23,68,0.8)';
+      target.style.background = 'rgba(255,23,68,0.08)';
 
-      const cursor = document.createElement('div');
-      cursor.style.position = 'fixed';
-      cursor.style.left = `${x + 10}px`;
-      cursor.style.top = `${y + 10}px`;
-      cursor.style.width = '0';
-      cursor.style.height = '0';
-      cursor.style.borderLeft = '13px solid #111827';
-      cursor.style.borderTop = '9px solid transparent';
-      cursor.style.borderBottom = '9px solid transparent';
-      cursor.style.transform = 'rotate(38deg)';
-      cursor.style.filter = 'drop-shadow(0 0 2px white) drop-shadow(0 0 2px white)';
+      const horizontal = document.createElement('div');
+      horizontal.style.position = 'fixed';
+      horizontal.style.left = `${x - 24}px`;
+      horizontal.style.top = `${y - 1}px`;
+      horizontal.style.width = '48px';
+      horizontal.style.height = '2px';
+      horizontal.style.background = '#ff1744';
+      horizontal.style.boxShadow = '0 0 0 1px white';
 
-      root.append(circle, cursor);
+      const vertical = document.createElement('div');
+      vertical.style.position = 'fixed';
+      vertical.style.left = `${x - 1}px`;
+      vertical.style.top = `${y - 24}px`;
+      vertical.style.width = '2px';
+      vertical.style.height = '48px';
+      vertical.style.background = '#ff1744';
+      vertical.style.boxShadow = '0 0 0 1px white';
+
+      const dot = document.createElement('div');
+      dot.style.position = 'fixed';
+      dot.style.left = `${x - 4}px`;
+      dot.style.top = `${y - 4}px`;
+      dot.style.width = '8px';
+      dot.style.height = '8px';
+      dot.style.borderRadius = '999px';
+      dot.style.background = '#ff1744';
+      dot.style.boxShadow = '0 0 0 2px white';
+
+      const cursorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      cursorSvg.setAttribute('viewBox', '0 0 32 42');
+      cursorSvg.setAttribute('width', '32');
+      cursorSvg.setAttribute('height', '42');
+      cursorSvg.style.position = 'fixed';
+      cursorSvg.style.left = `${x + 8}px`;
+      cursorSvg.style.top = `${y + 8}px`;
+      cursorSvg.style.filter = 'drop-shadow(0 0 2px white) drop-shadow(0 2px 3px rgba(0,0,0,0.35))';
+      cursorSvg.innerHTML = [
+        '<path d="M2 2 L2 34 L10.5 25 L16 39 L22 36.5 L16.5 23.5 L29 23.5 Z" fill="#111827" stroke="white" stroke-width="2" />',
+        '<path d="M2 2 L2 34 L10.5 25 L16 39" fill="none" stroke="#111827" stroke-width="1" />',
+      ].join('');
+
+      root.append(target, horizontal, vertical, dot, cursorSvg);
       document.documentElement.append(root);
     }, pointer);
 
@@ -444,7 +482,10 @@ async function installRecorderScript(page: Page): Promise<void> {
     (${script.toString()})();
   })();`;
   await page.addInitScript({ content });
-  await page.addScriptTag({ content }).catch(() => undefined);
+  await page.evaluate((source) => {
+    const run = new Function(source);
+    run();
+  }, content).catch(() => undefined);
 }
 
 async function runRecorder(args: RecorderArgs): Promise<void> {
@@ -454,13 +495,32 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
   await fs.mkdir(actionsDir, { recursive: true });
   await fs.mkdir(screenshotsDir, { recursive: true });
 
-  const browser: Browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 900 },
-    acceptDownloads: true,
-    ignoreHTTPSErrors: true,
-  });
-  const page = await context.newPage();
+  let browser: Browser | undefined;
+  let context: BrowserContext;
+  if (args.userDataDir) {
+    context = await chromium.launchPersistentContext(path.resolve(args.userDataDir), {
+      headless: false,
+      channel: args.channel,
+      viewport: { width: 1280, height: 900 },
+      acceptDownloads: true,
+      ignoreHTTPSErrors: true,
+      locale: 'zh-CN',
+      timezoneId: 'Asia/Shanghai',
+    });
+  } else {
+    browser = await chromium.launch({
+      headless: false,
+      channel: args.channel,
+    });
+    context = await browser.newContext({
+      viewport: { width: 1280, height: 900 },
+      acceptDownloads: true,
+      ignoreHTTPSErrors: true,
+      locale: 'zh-CN',
+      timezoneId: 'Asia/Shanghai',
+    });
+  }
+  const page = context.pages()[0] ?? (await context.newPage());
   const index: RecordingIndex = {
     schemaVersion: 1,
     taskName: args.task,
@@ -480,25 +540,22 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     await fs.writeFile(path.join(recordingDir, 'recording.json'), `${JSON.stringify(index, null, 2)}\n`, 'utf-8');
   };
 
-  const recordPayload = async (payload: BrowserEventPayload) => {
-    if (isClosing) {
-      return;
-    }
+  const recordPayload = async (sourcePage: Page, payload: BrowserEventPayload) => {
     actionCount += 1;
     const id = `action-${String(actionCount).padStart(3, '0')}`;
-    const beforeSnapshot = await safeSnapshot(page);
+    const beforeSnapshot = await safeSnapshot(sourcePage);
     const beforeScreenshot = path.join(screenshotsDir, `${id}-before.png`);
-    await safeScreenshot(page, beforeScreenshot);
+    await safeScreenshot(sourcePage, beforeScreenshot);
 
-    await page.waitForLoadState('domcontentloaded', { timeout: 2500 }).catch(() => undefined);
-    await page.waitForTimeout(700).catch(() => undefined);
+    await sourcePage.waitForLoadState('domcontentloaded', { timeout: 2500 }).catch(() => undefined);
+    await sourcePage.waitForTimeout(700).catch(() => undefined);
 
-    const afterSnapshot = await safeSnapshot(page);
+    const afterSnapshot = await safeSnapshot(sourcePage);
     const afterScreenshot = path.join(screenshotsDir, `${id}-after.png`);
-    await safeScreenshot(page, afterScreenshot);
+    await safeScreenshot(sourcePage, afterScreenshot);
     const annotatedScreenshot = payload.pointer ? path.join(screenshotsDir, `${id}-annotated.png`) : undefined;
     if (annotatedScreenshot && payload.pointer) {
-      await safeAnnotatedScreenshot(page, annotatedScreenshot, payload.pointer);
+      await safeAnnotatedScreenshot(sourcePage, annotatedScreenshot, payload.pointer);
     }
 
     const action: ActionRecord = {
@@ -542,6 +599,7 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
       actionFile: relativeToRecording(recordingDir, actionFile),
       beforeViewport: action.screenshots.beforeViewport,
       afterViewport: action.screenshots.afterViewport,
+      annotatedViewport: action.screenshots.annotatedViewport,
       urlBefore: action.urlBefore,
       urlAfter: action.urlAfter,
       targetSummary: targetSummary(payload.target),
@@ -550,31 +608,48 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     console.log(`[recorded] ${id} ${payload.type} ${targetSummary(payload.target) ?? ''}`);
   };
 
-  await page.exposeBinding('__buaCuaRecordAction', (_source, payload: BrowserEventPayload) => {
+  await context.exposeBinding('__buaCuaRecordAction', (source: { page: Page }, payload: BrowserEventPayload) => {
+    if (isClosing) {
+      return;
+    }
     console.log(`[recorder] event ${payload.type} queued`);
-    const task = recordPayload(payload).catch((error: unknown) => {
+    const task = recordPayload(source.page, payload).catch((error: unknown) => {
       console.error('[recorder] failed to record action:', error);
     });
     pending.add(task);
     task.finally(() => pending.delete(task));
   });
 
-  page.on('console', (message) => {
-    const text = message.text();
-    if (text.includes('bua-cua-recorder')) {
-      console.log(`[page:${message.type()}] ${text}`);
-    }
-  });
-  page.on('pageerror', (error) => {
-    console.error(`[page:error] ${error.message}`);
-  });
+  const openPages = new Set<Page>();
+  const setupPage = async (targetPage: Page) => {
+    openPages.add(targetPage);
+    targetPage.on('console', (message) => {
+      const text = message.text();
+      if (text.includes('bua-cua-recorder')) {
+        console.log(`[page:${message.type()}] ${text}`);
+      }
+    });
+    targetPage.on('pageerror', (error) => {
+      console.error(`[page:error] ${error.message}`);
+    });
+    targetPage.on('framenavigated', async (frame) => {
+      if (frame === targetPage.mainFrame()) {
+        await installRecorderScript(targetPage).catch(() => undefined);
+      }
+    });
+    targetPage.once('close', () => {
+      openPages.delete(targetPage);
+      if (openPages.size === 0) {
+        void finish();
+      }
+    });
+    await installRecorderScript(targetPage);
+  };
 
-  await installRecorderScript(page);
-  page.on('framenavigated', async (frame) => {
-    if (frame === page.mainFrame()) {
-      await installRecorderScript(page).catch(() => undefined);
-    }
+  context.on('page', (newPage) => {
+    void setupPage(newPage);
   });
+  await setupPage(page);
   console.log(`[recorder] Opened ${args.url}`);
   console.log('[recorder] Operate the browser manually. Close the browser or press Ctrl+C to finish.');
   await page.goto(args.url, { waitUntil: 'domcontentloaded' });
@@ -603,7 +678,8 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     finishPromise = (async () => {
       await Promise.allSettled(Array.from(pending));
       await saveIndex();
-      await browser.close().catch(() => undefined);
+      await context.close().catch(() => undefined);
+      await browser?.close().catch(() => undefined);
       console.log(`[recorder] Recording saved to ${recordingDir}`);
     })();
     return finishPromise;
@@ -613,20 +689,22 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
     void finish().then(() => process.exit(0));
   });
 
-  page.once('close', () => {
-    void finish();
-  });
   context.once('close', () => {
     void finish();
   });
-  browser.once('disconnected', () => {
+  browser?.once('disconnected', () => {
     void finish();
   });
   await new Promise<void>((resolve) => {
     const done = () => resolve();
-    page.once('close', done);
     context.once('close', done);
-    browser.once('disconnected', done);
+    browser?.once('disconnected', done);
+    const timer = setInterval(() => {
+      if (openPages.size === 0) {
+        clearInterval(timer);
+        resolve();
+      }
+    }, 250);
   });
   await finish();
 }

@@ -120,6 +120,14 @@ enhanced recorder 不替代官方 Playwright codegen。第一版它只记录 raw
 uv run bua-cua record arxiv-demo --url https://arxiv.org/
 ```
 
+如果目标站点对全新浏览器上下文比较敏感，可以使用独立的持久化 profile，并指定真实浏览器 channel：
+
+```powershell
+uv run bua-cua record arxiv-demo --url https://www.baidu.com/ --channel chrome --user-data-dir .\auth\recorder-chrome-profile
+```
+
+不要直接把日常个人浏览器 profile 作为 `--user-data-dir`。建议使用项目内独立目录，让站点逐步积累正常 cookie/session，同时避免污染个人浏览器数据。
+
 输出目录：
 
 ```text
@@ -131,7 +139,9 @@ inputs/arxiv-demo/recording/
   screenshots/action-001-annotated.png
 ```
 
-对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片中的品红色圆圈和光标标记是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
+对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片中的红色十字、中心圆点和鼠标指针标记是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
+
+如果 recorder 比日常浏览器更容易触发安全验证，通常是因为默认 Playwright 使用全新的临时 profile，没有历史 cookie、登录态和长期行为记录，也可能被站点识别为自动化浏览器。优先尝试 `--user-data-dir` 和 `--channel chrome`。
 
 当前第一版可能需要录制两次：一次使用官方 `npx playwright codegen` 生成脚本轨迹，一次使用 `uv run bua-cua record ...` 生成证据轨迹。若两次录制存在细微差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 仅作为 verifier、locator 和 recovery 的辅助证据。
 
