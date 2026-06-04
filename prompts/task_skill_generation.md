@@ -2,10 +2,11 @@
 
 本 prompt 用于生成具体网页任务的 **Task Skill**，不是生成 BUA-CUA Toolkit 本身。BUA-CUA Toolkit 是本仓库提供的生成与执行工具包；Task Skill 是位于 `skills/<task_name>/` 的具体任务脚本。
 
-你需要基于下面两类输入，生成一个经过人工审查后可执行的 BUA-CUA 任务级 Skill：
+你需要基于下面输入，生成一个经过人工审查后可执行的 BUA-CUA 任务级 Skill：
 
 1. 用户的自然语言任务描述。
 2. 一段由人工成功示范录制得到的 Playwright codegen 脚本。
+3. 可选的 enhanced recorder raw evidence，例如 `inputs/<task>/recording/recording.json`、`actions/*.json` 和截图。
 
 你必须一次性输出且只输出三个文件的内容：`skill.json`、`SKILL.md`、`index.ts`。
 
@@ -48,6 +49,8 @@ await ctx.withFallback(
 ## 生成规则
 
 - 保留 codegen 脚本中体现出来的人类示范业务顺序。
+- 如果提供了 enhanced recorder raw evidence，应把它作为辅助证据使用，不替代 codegen 的业务顺序。
+- 使用 raw evidence 时应优先关注当前步骤相关的 before/after 状态变化、局部 DOM evidence、selector candidates 和截图；不要把全部 evidence 无差别塞入单个步骤。
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；
@@ -66,6 +69,7 @@ await ctx.withFallback(
   - 过度依赖 `nth()`；
   - 框架生成的选择器。
 - 如果无法推断稳定 locator，应将 Midscene 作为该步骤的 fallback，必要时作为该步骤主操作。
+- 生成 verifier 时优先参考动作后的业务状态变化，例如 URL 变化、关键文本出现、筛选 chip 可见、下载文件存在、弹窗打开或表格内容变化；不要只验证“点击动作已执行”。
 - 只参数化业务数据：
   - NE 名称；
   - 搜索关键字；

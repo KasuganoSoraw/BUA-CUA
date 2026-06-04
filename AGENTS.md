@@ -5,10 +5,13 @@
 - **生成 Task Skill**：根据 `intent.md` 和 Playwright `codegen.spec.ts`，生成 `skill.json`、`SKILL.md`、`index.ts`。
 - **执行 Task Skill**：通过 `uv run bua-cua run-skill ...` 执行已经生成并经过人工审查的 Task Skill。
 
+enhanced recorder 是生成 Task Skill 的输入增强工具，用于补充脚本轨迹之外的 raw evidence。
+
 ## 概念边界
 
 - **BUA-CUA Toolkit**：本仓库整体，包含 prompt、schema、Python CLI、Node/TS Runtime、示例 Task Skill 和安装指引。
 - **Task Skill Generator Guidance**：主要是 `prompts/task_skill_generation.md`，用于指导 agent 生成 Task Skill。它不是自动 LLM 调用器。
+- **Enhanced Recorder**：由 `uv run bua-cua record ...` 调用，用于补充 Playwright codegen 没有记录的 raw evidence，例如截图、坐标、局部 DOM evidence、selector 候选和 before/after 状态。
 - **Task Skill Runner**：由 `uv run bua-cua run-skill ...` 调用，负责加载、校验、运行 Task Skill。
 - **Task Skill**：位于 `skills/<task_name>/` 的具体网页任务级混编脚本，使用 Playwright + Midscene，并通过 `ctx.withFallback` 做局部 fallback 和日志。
 - **Recovery-driven Task Skill**：没有 Playwright codegen 或稳定 primary path 时，`index.ts` 仍然拆分业务 step，但每个网页操作 step 可以直接调用 `ctx.recoverStep` 交给 step recovery agent 执行。
@@ -115,13 +118,31 @@ inputs/<task_name>/intent.md
 inputs/<task_name>/codegen.spec.ts
 ```
 
-4. 可选填写人工步骤说明：
+4. 可选执行 enhanced recorder 证据录制：
+
+```powershell
+uv run bua-cua record <task_name> --url <start_url>
+```
+
+生成目录：
+
+```text
+inputs/<task_name>/recording/
+  recording.json
+  actions/action-001.json
+  screenshots/action-001-before.png
+  screenshots/action-001-after.png
+```
+
+第一版 enhanced recorder 不替代官方 Playwright codegen，可能需要单独录制一次。若两次录制存在差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 只作为 verifier、locator 和 step recovery 的辅助证据。
+
+5. 可选填写人工步骤说明：
 
 ```text
 inputs/<task_name>/steps.md
 ```
 
-5. 使用 `prompts/task_skill_generation.md` 指导 agent 生成 Task Skill。
+6. 使用 `prompts/task_skill_generation.md` 指导 agent 生成 Task Skill。
 
 生成目标目录：
 
@@ -134,7 +155,7 @@ skills/<task_name>/
   recordings/codegen.spec.ts
 ```
 
-6. 人工审查生成结果。
+7. 人工审查生成结果。
 
 重点检查：
 
@@ -146,14 +167,14 @@ skills/<task_name>/
 - 是否没有硬编码模型密钥。
 - 是否没有未经确认的危险写入操作。
 
-7. 校验 Task Skill：
+8. 校验 Task Skill：
 
 ```powershell
 uv run bua-cua validate-skill <task_name>
 npm run typecheck
 ```
 
-8. 本地 headed 执行真实 Task Skill：
+9. 本地 headed 执行真实 Task Skill：
 
 ```powershell
 uv run bua-cua run-skill <task_name> --args .\skills\<task_name>\fixtures\input.example.json
@@ -220,6 +241,7 @@ await ctx.recoverStep(
 
 ```powershell
 uv run bua-cua scaffold-input <task_name>
+uv run bua-cua record <task_name> --url <start_url>
 uv run bua-cua validate-skill <task_name>
 uv run bua-cua run-skill <task_name> --args .\skills\<task_name>\fixtures\input.example.json
 npm run typecheck

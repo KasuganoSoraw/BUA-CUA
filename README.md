@@ -4,7 +4,7 @@ BUA-CUA Toolkit 是一个面向 agent 的网页任务自动化工具包，不是
 
 它提供两类能力：
 
-- **生成 Task Skill**：基于自然语言任务描述和 Playwright codegen 录制脚本，生成经过人工审查后可执行的 Playwright + Midscene 混编脚本。
+- **生成 Task Skill**：基于自然语言任务描述、Playwright codegen 录制脚本和可选 enhanced recorder 证据，生成经过人工审查后可执行的 Playwright + Midscene 混编脚本。
 - **执行 Task Skill**：通过 Python CLI 和 Node/TS Runtime 加载、校验并执行已经生成的 Task Skill。
 
 具体网页任务自动化能力称为 **Task Skill**，位于 `skills/<task_name>/`，例如 `login_to_nms` 或 `mock_query_eline_service_info`。
@@ -112,6 +112,26 @@ npx playwright codegen --target=typescript -o .\inputs\arxiv-demo\codegen.spec.t
 npx playwright codegen --target=typescript -o .\inputs\arxiv-demo\codegen.spec.ts https://arxiv.org/
 ```
 
+### 启动 enhanced recorder 证据录制
+
+enhanced recorder 不替代官方 Playwright codegen。第一版它只记录 raw evidence，例如 viewport 截图、点击坐标、局部 DOM evidence、selector 候选和 before/after 状态。
+
+```powershell
+uv run bua-cua record arxiv-demo --url https://arxiv.org/
+```
+
+输出目录：
+
+```text
+inputs/arxiv-demo/recording/
+  recording.json
+  actions/action-001.json
+  screenshots/action-001-before.png
+  screenshots/action-001-after.png
+```
+
+当前第一版可能需要录制两次：一次使用官方 `npx playwright codegen` 生成脚本轨迹，一次使用 `uv run bua-cua record ...` 生成证据轨迹。若两次录制存在细微差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 仅作为 verifier、locator 和 recovery 的辅助证据。
+
 ### 运行原始 codegen 录制脚本
 
 当前项目是 ESM，直接跑 `.ts` 录制脚本时 Playwright 可能无法自动转译。可以先临时编译成 `.js` 再运行：
@@ -143,6 +163,7 @@ npx playwright test ".playwright-tmp/codegen.spec.js"
 prompts/task_skill_generation.md
 inputs/<task>/intent.md
 inputs/<task>/codegen.spec.ts
+inputs/<task>/recording/recording.json  # 可选 raw evidence
 ```
 
 并生成：
