@@ -243,14 +243,24 @@ async function safeAnnotatedScreenshot(
   }
 }
 
-async function waitForActionResult(page: Page, urlBefore: string): Promise<void> {
-  await Promise.race([
-    page.waitForURL((url) => url.toString() !== urlBefore, { timeout: 5000 }).catch(() => undefined),
-    page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => undefined),
-    page.waitForTimeout(900),
-  ]);
-  await page.waitForLoadState('load', { timeout: 5000 }).catch(() => undefined);
-  await page.waitForTimeout(500).catch(() => undefined);
+async function waitForActionResult(page: Page, urlBefore: string, actionType: RecorderActionType): Promise<void> {
+  if (actionType === 'input' || actionType === 'select' || actionType === 'keypress') {
+    await page.waitForTimeout(500).catch(() => undefined);
+    return;
+  }
+
+  const urlChanged = await page
+    .waitForURL((url) => url.toString() !== urlBefore, { timeout: 5000 })
+    .then(() => true)
+    .catch(() => false);
+  if (urlChanged) {
+    await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => undefined);
+    await page.waitForLoadState('load', { timeout: 5000 }).catch(() => undefined);
+    await page.waitForTimeout(700).catch(() => undefined);
+    return;
+  }
+
+  await page.waitForTimeout(900).catch(() => undefined);
 }
 
 async function installRecorderScript(page: Page): Promise<void> {
@@ -448,6 +458,27 @@ async function installRecorderScript(page: Page): Promise<void> {
         });
       }
     };
+    const shouldRecordInput = (event: Event, target: Element) => {
+      if (!event.isTrusted) {
+        return false;
+      }
+      if (target instanceof HTMLInputElement && ['checkbox', 'radio'].includes(target.type)) {
+        return false;
+      }
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) {
+        return true;
+      }
+      const rect = target.getBoundingClientRect();
+      if (rect.width <= 1 || rect.height <= 1) {
+        return false;
+      }
+      const style = window.getComputedStyle(target);
+      const readOnly = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement ? target.readOnly : false;
+      if (style.visibility === 'hidden' || style.display === 'none' || target.disabled || readOnly) {
+        return false;
+      }
+      return document.activeElement === target;
+    };
 
     document.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) {
@@ -458,6 +489,9 @@ async function installRecorderScript(page: Page): Promise<void> {
     document.addEventListener('input', (event) => {
       const target = event.target instanceof Element ? event.target : null;
       if (!target) {
+        return;
+      }
+      if (!shouldRecordInput(event, target)) {
         return;
       }
       const existing = win.__buaCuaInputTimers?.get(target);
@@ -478,6 +512,9 @@ async function installRecorderScript(page: Page): Promise<void> {
     }, true);
     document.addEventListener('change', (event) => {
       const target = event.target;
+      if (!(target instanceof Element) || !shouldRecordInput(event, target)) {
+        return;
+      }
       const type = target instanceof HTMLSelectElement ? 'select' : 'input';
       dispatch(type, event);
     }, true);
@@ -544,6 +581,7 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
   let actionCount = 0;
   let isClosing = false;
   let finishPromise: Promise<void> | undefined;
+  let recordChain = Promise.resolve();
   const pending = new Set<Promise<void>>();
 
   const saveIndex = async () => {
@@ -562,7 +600,7 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
       await safeAnnotatedScreenshot(sourcePage, annotatedScreenshot, payload.pointer);
     }
 
-    await waitForActionResult(sourcePage, beforeSnapshot.url);
+    await waitForActionResult(sourcePage, beforeSnapshot.url, payload.type);
 
     const afterSnapshot = await safeSnapshot(sourcePage);
     const afterScreenshot = path.join(screenshotsDir, `${id}-after.png`);
@@ -623,9 +661,10 @@ async function runRecorder(args: RecorderArgs): Promise<void> {
       return;
     }
     console.log(`[recorder] event ${payload.type} queued`);
-    const task = recordPayload(source.page, payload).catch((error: unknown) => {
+    const task = recordChain.then(() => recordPayload(source.page, payload)).catch((error: unknown) => {
       console.error('[recorder] failed to record action:', error);
     });
+    recordChain = task.then(() => undefined, () => undefined);
     pending.add(task);
     task.finally(() => pending.delete(task));
   });
