@@ -23,6 +23,7 @@ dist/
 build/
 runs/
 auth/storage-state.json
+auth/recorder-*/
 downloads/
 test-results/
 .playwright-tmp/
