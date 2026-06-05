@@ -52,11 +52,11 @@ Step Recovery Agent 使用 OpenAI-compatible Chat Completions 协议。百炼/Qw
 ```powershell
 $env:MIDSCENE_MODEL_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
 $env:MIDSCENE_MODEL_API_KEY="<your-key>"
-$env:MIDSCENE_MODEL_NAME="qwen3.6-plus"
+$env:MIDSCENE_MODEL_NAME="qwen3.6-plus-2026-04-02"
 $env:MIDSCENE_MODEL_FAMILY="qwen3.6"
 $env:BUA_CUA_RECOVERY_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
 $env:BUA_CUA_RECOVERY_API_KEY="<your-key>"
-$env:BUA_CUA_RECOVERY_MODEL="qwen3.6-plus"
+$env:BUA_CUA_RECOVERY_MODEL="qwen3.6-plus-2026-04-02"
 $env:BUA_CUA_RECOVERY_VISION="true"
 ```
 

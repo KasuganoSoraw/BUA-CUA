@@ -40,7 +40,7 @@ export type RecoveryModelConfig = {
 export function loadRecoveryModelConfig(): RecoveryModelConfig {
   const baseUrl = process.env.BUA_CUA_RECOVERY_BASE_URL ?? '';
   const apiKey = process.env.BUA_CUA_RECOVERY_API_KEY ?? '';
-  const model = process.env.BUA_CUA_RECOVERY_MODEL ?? 'qwen3.6-plus';
+  const model = process.env.BUA_CUA_RECOVERY_MODEL ?? 'qwen3.6-plus-2026-04-02';
   const maxTurns = Number.parseInt(process.env.BUA_CUA_RECOVERY_MAX_TURNS ?? '6', 10);
 
   return {
