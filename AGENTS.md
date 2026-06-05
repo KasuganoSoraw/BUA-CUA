@@ -171,6 +171,8 @@ inputs/<task_name>/recording/
 uv run bua-cua trace-codegen <task_name>
 ```
 
+该命令会自动编译 `inputs/<task_name>/codegen.spec.ts`，生成临时 Playwright config，并显式关闭 trace 临时目录的 gitignore 测试发现影响。不要要求用户手写 JS 脚本或手动复制编译产物。
+
 生成目录：
 
 ```text

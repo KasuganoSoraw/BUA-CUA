@@ -184,7 +184,8 @@ npx playwright test ".playwright-tmp/codegen.spec.js"
 
 ### 为 codegen 脚本生成 Playwright trace
 
-`trace-codegen` 会运行 `inputs/<task>/codegen.spec.ts`，开启 Playwright trace，并把最新 `trace.zip` 保存到 `inputs/<task>/trace/trace.zip`。该 trace 用于补充 codegen 没有显式写出的 before/action/after 证据。
+`trace-codegen` 会运行 `inputs/<task>/codegen.spec.ts`，开启 Playwright trace，并把最新 `trace.zip` 保存到 `inputs/<task>/trace/trace.zip`。该命令会自动编译 TS 并生成临时 Playwright config，不需要手写 JS 脚本或复制文件到其他目录。
+该 trace 用于补充 codegen 没有显式写出的 before/action/after 证据。
 即使 codegen 脚本中途失败，只要 Playwright 产生了 trace，命令也会保留最新 `trace.zip` 供排查。
 
 ```powershell

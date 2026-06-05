@@ -49,6 +49,7 @@ def command_trace_codegen(args: argparse.Namespace) -> int:
     trace_dir = target / "trace"
     results_dir = trace_dir / "test-results"
     compiled_dir = trace_dir / "compiled"
+    config_path = trace_dir / "playwright.trace.config.cjs"
     trace_zip = trace_dir / "trace.zip"
     trace_dir.mkdir(parents=True, exist_ok=True)
     if results_dir.exists():
@@ -82,10 +83,27 @@ def command_trace_codegen(args: argparse.Namespace) -> int:
         print(f"ERROR: Compiled script not found: {compiled_script}", file=sys.stderr)
         return 1
 
+    config_path.write_text(
+        "\n".join(
+            [
+                "const { defineConfig } = require('@playwright/test');",
+                "",
+                "module.exports = defineConfig({",
+                "  testDir: './compiled',",
+                "  testMatch: /.*\\.spec\\.js$/,",
+                "  respectGitIgnore: false,",
+                "});",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
     cmd = [
         str(playwright),
         "test",
-        compiled_script.relative_to(ROOT).as_posix(),
+        "--config",
+        str(config_path.resolve()),
         "--trace",
         "on",
         "--output",
@@ -418,4 +436,3 @@ def command_summarize_trace(args: argparse.Namespace) -> int:
     print(f"Evidence images saved: {image_dir}")
     print(f"Trace status: {output['traceStatus']}")
     return 0
-
