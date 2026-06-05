@@ -220,10 +220,13 @@ inputs/<task_name>/steps.md
 skills/<task_name>/
   skill.json
   SKILL.md
+  INFERRED_INTENT.md
   index.ts
   fixtures/input.example.json
   recordings/codegen.spec.ts
 ```
+
+`INFERRED_INTENT.md` 必须明确说明：该文件由 LLM 根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 recorder evidence 推测生成，是执行与 recovery 的参考说明，不是工程事实层，也不代表用户逐字确认过。`skill.json` 应通过 `inferredIntent` 字段引用该文件。
 
 9. 人工审查生成结果。
 

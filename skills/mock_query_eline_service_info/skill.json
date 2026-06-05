@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Mock read-only Task Skill demonstrating Playwright primary paths, Midscene fallbacks, and verifiers.",
   "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
   "risk": "read_only",
   "requiresSession": true,
   "preSkills": ["login_to_nms"],

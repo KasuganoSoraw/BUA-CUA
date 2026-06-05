@@ -73,6 +73,17 @@ function loadManifest(skillDir: string): SkillManifest {
   return readJson<SkillManifest>(path.join(skillDir, 'skill.json'));
 }
 
+function loadInferredIntent(skillDir: string, manifest: SkillManifest): string | undefined {
+  if (!manifest.inferredIntent) {
+    return undefined;
+  }
+  const intentPath = path.join(skillDir, manifest.inferredIntent);
+  if (!fs.existsSync(intentPath)) {
+    throw new Error(`Missing inferred intent file: ${intentPath}`);
+  }
+  return fs.readFileSync(intentPath, 'utf-8');
+}
+
 function validateArgs(manifest: SkillManifest, args: SkillArgs): void {
   const ajv = new Ajv({ allErrors: true });
   const validate = ajv.compile(manifest.argsSchema);
@@ -100,8 +111,9 @@ function makeContext(params: {
   browserContext: SkillContext['browserContext'];
   agent: SkillContext['agent'];
   harness: SkillContext['harness'];
+  inferredIntent?: string;
 }): SkillContext {
-  const { manifest, logger, page, browser, browserContext, agent, harness } = params;
+  const { manifest, logger, page, browser, browserContext, agent, harness, inferredIntent } = params;
 
   async function screenshot(label: string): Promise<string> {
     const filename = `${label.replace(/[^a-zA-Z0-9_-]+/g, '_')}-${Date.now()}.png`;
@@ -118,6 +130,7 @@ function makeContext(params: {
     harness,
     runId: logger.runId,
     skillName: manifest.name,
+    inferredIntent,
     async step<T>(name: string, fn: () => Promise<T>): Promise<T> {
       logger.info(manifest.name, 'step_start', name, undefined, name);
       try {
@@ -292,19 +305,31 @@ async function runSkill(params: {
 }): Promise<void> {
   const manifest = loadManifest(params.skillDir);
   validateArgs(manifest, params.args);
+  const inferredIntent = loadInferredIntent(params.skillDir, manifest);
   const module = await loadSkillModule(params.skillDir, manifest);
-  await module.run({ ...params.ctx, skillName: manifest.name }, params.args);
+  await module.run({ ...params.ctx, skillName: manifest.name, inferredIntent }, params.args);
 }
 
 async function main(): Promise<void> {
   const options = parseOptions(process.argv.slice(2));
   const skillDir = resolveSkillDir(options.skill);
   const manifest = loadManifest(skillDir);
+  const inferredIntent = loadInferredIntent(skillDir, manifest);
   const args = readJson<SkillArgs>(path.resolve(options.argsPath));
   validateArgs(manifest, args);
 
   const logger = new JsonlLogger(ROOT_DIR, manifest.name);
-  logger.info(manifest.name, 'run_start', undefined, { skillDir, headless: options.headless });
+  logger.info(manifest.name, 'run_start', undefined, {
+    skillDir,
+    headless: options.headless,
+    inferredIntent: manifest.inferredIntent,
+  });
+  if (inferredIntent) {
+    logger.info(manifest.name, 'inferred_intent_loaded', undefined, {
+      path: manifest.inferredIntent,
+      chars: inferredIntent.length,
+    });
+  }
 
   const browser = await chromium.launch({ headless: options.headless });
   const storageState = fs.existsSync(AUTH_STATE_PATH) ? AUTH_STATE_PATH : undefined;
@@ -320,7 +345,7 @@ async function main(): Promise<void> {
     browserContext,
     artifactDir: logger.artifactDir,
   });
-  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent, harness });
+  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent, harness, inferredIntent });
 
   try {
     if (!options.skipPreSkills) {

@@ -162,6 +162,13 @@ def validate_skill(path: Path) -> list[str]:
     elif not (path / entry).exists():
         errors.append(f"Missing entry file: {path / entry}")
 
+    inferred_intent = manifest.get("inferredIntent")
+    if inferred_intent is not None:
+        if not isinstance(inferred_intent, str):
+            errors.append("skill.json field `inferredIntent` must be a string when present")
+        elif not (path / inferred_intent).exists():
+            errors.append(f"Missing inferred intent file: {path / inferred_intent}")
+
     if not (path / "SKILL.md").exists():
         errors.append(f"Missing SKILL.md: {path / 'SKILL.md'}")
 

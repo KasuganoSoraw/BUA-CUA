@@ -10,6 +10,7 @@ export type SkillManifest = {
   version: string;
   description?: string;
   entry: string;
+  inferredIntent?: string;
   risk: 'read_only' | 'write_review_required' | 'destructive_review_required';
   requiresSession?: boolean;
   preSkills?: string[];
@@ -37,6 +38,7 @@ export type SkillContext = {
   harness: RecoveryHarness;
   runId: string;
   skillName: string;
+  inferredIntent?: string;
   step<T>(name: string, fn: () => Promise<T>): Promise<T>;
   withFallback<T>(
     name: string,

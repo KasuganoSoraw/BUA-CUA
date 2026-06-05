@@ -232,7 +232,7 @@ inputs/<task>/intent.md
 inputs/<task>/codegen.spec.ts
 inputs/<task>/recording/recording.json  # 可选 raw evidence
 inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
-inputs/<task>/trace/trace_evidence.json # 可选 trace facts summary
+inputs/<task>/trace/trace_evidence.json # 必须，工程事实层
 ```
 
 并生成：
@@ -241,10 +241,13 @@ inputs/<task>/trace/trace_evidence.json # 可选 trace facts summary
 skills/<task>/
   skill.json
   SKILL.md
+  INFERRED_INTENT.md
   index.ts
   fixtures/input.example.json
   recordings/codegen.spec.ts
 ```
+
+`INFERRED_INTENT.md` 必须说明它是 LLM 根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 raw evidence 推测生成的任务意图。它可作为后续执行与 step recovery 的参考，但不是工程事实层；事实层仍以 `trace_evidence.json` 为准。
 
 ### 校验 Task Skill
 

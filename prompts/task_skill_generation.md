@@ -6,11 +6,13 @@
 
 1. 用户的自然语言任务描述。
 2. 一段由人工成功示范录制得到的 Playwright codegen 脚本。
-3. 可选的 enhanced recorder raw evidence，例如 `inputs/<task>/recording/recording.json`、`actions/*.json` 和截图。
-4. 可选的 Playwright trace evidence，例如 `inputs/<task>/trace/trace.zip`。
-5. 可选的 trace facts summary，例如 `inputs/<task>/trace/trace_evidence.json`。
+3. 必须提供的 trace facts summary：`inputs/<task>/trace/trace_evidence.json`。
+4. 可选的 enhanced recorder raw evidence，例如 `inputs/<task>/recording/recording.json`、`actions/*.json` 和截图。
+5. 可选的 Playwright trace evidence 原始包，例如 `inputs/<task>/trace/trace.zip`，用于必要时查看细节。
 
-你必须一次性输出且只输出三个文件的内容：`skill.json`、`SKILL.md`、`index.ts`。
+你必须一次性输出且只输出四个文件的内容：`skill.json`、`SKILL.md`、`INFERRED_INTENT.md`、`index.ts`。
+
+其中 `INFERRED_INTENT.md` 是模型根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 recorder evidence 推测出的任务意图与步骤理解。它不是工程事实层，不得写成“用户明确说过”。如果用户的 `intent.md` 很简略或为空，应明确说明哪些内容是根据轨迹推断出来的。
 
 ## Runtime 契约
 
@@ -54,8 +56,9 @@ await ctx.withFallback(
 - 如果提供了 enhanced recorder raw evidence，应把它作为辅助证据使用，不替代 codegen 的业务顺序。
 - 使用 raw evidence 时应优先关注当前步骤相关的 before/after 状态变化、局部 DOM evidence、selector candidates 和截图；不要把全部 evidence 无差别塞入单个步骤。
 - 如果截图文件名或 action 记录中出现 `annotatedViewport` / `*-annotated.png`，该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 BUA-CUA recorder 后处理添加的，用于指示人类操作位置，不是网页自身 UI。不得把该标记当成页面元素或业务控件。
-- 如果提供了 Playwright trace，应把它用于理解 codegen action 的 before/action/after 状态、locator 实际目标、页面跳转和 verifier 候选；trace 不替代运行时 fallback，也不意味着页面变化后无需 recovery。
-- 如果提供了 `trace_evidence.json`，应优先使用其中工程提取的 facts。模型生成的步骤描述、verifier 和 recovery hints 必须能追溯到 action id、snapshot id 或 selected frame；不得编造 trace 中不存在的动作、URL、locator 或页面文本。
+- 必须优先使用 `trace_evidence.json` 中工程提取的 facts 来理解 codegen action 的 before/action/after 状态、locator 实际目标、页面跳转和 verifier 候选。
+- 如果额外提供了 Playwright trace 原始包，可在事实摘要不足时查看细节；trace 不替代运行时 fallback，也不意味着页面变化后无需 recovery。
+- 模型生成的步骤描述、verifier 和 recovery hints 必须能追溯到 action id、snapshot id 或 selected frame；不得编造 trace 中不存在的动作、URL、locator 或页面文本。
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；
@@ -95,6 +98,7 @@ await ctx.withFallback(
 - `type`：固定为 `"task"`
 - `version`
 - `entry`：通常为 `"index.ts"`
+- `inferredIntent`：通常为 `"INFERRED_INTENT.md"`
 - `risk`
 - `argsSchema`
 
@@ -103,6 +107,14 @@ await ctx.withFallback(
 - `description`
 - `requiresSession`
 - `preSkills`
+
+如果生成了 `INFERRED_INTENT.md`，`skill.json` 必须引用它：
+
+```json
+{
+  "inferredIntent": "INFERRED_INTENT.md"
+}
+```
 
 如果业务 Skill 依赖登录态，应通过 `preSkills` 声明登录 Skill，例如：
 
@@ -123,6 +135,30 @@ await ctx.withFallback(
 - 生成的步骤大纲；
 - verifier 策略；
 - 有风险操作的人工审查注意事项。
+
+`SKILL.md` 可以摘要说明模型理解的步骤，但完整的模型推测意图必须放在 `INFERRED_INTENT.md`。
+
+## `INFERRED_INTENT.md` 要求
+
+使用中文描述，并包含醒目的来源说明：
+
+```md
+# LLM 推测任务意图
+
+> 本文件由 LLM 根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 recorder evidence 推测生成。
+> 它是执行与 recovery 的参考说明，不是工程事实层，也不代表用户逐字确认过。
+```
+
+内容应包含：
+
+- 任务目标假设；
+- 参数含义假设；
+- 模型归纳出的业务步骤；
+- 每个步骤对应的 codegen 行号、trace action id、snapshot/frame 证据；
+- verifier 设计依据；
+- 不确定点和需要人工审查的地方。
+
+不要把 `trace_evidence.json` 的全部内容复制进来；只引用关键 action id、locator、URL、截图路径或状态变化。
 
 ## `index.ts` 要求
 
