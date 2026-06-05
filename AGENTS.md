@@ -212,7 +212,19 @@ inputs/<task_name>/trace/
 inputs/<task_name>/steps.md
 ```
 
-8. 使用 `prompts/task_skill_generation.md` 指导 agent 生成 Task Skill。
+8. 使用 Qwen/OpenAI-compatible 模型生成 Task Skill。
+
+```powershell
+uv run bua-cua generate-skill <task_name>
+```
+
+如果 `skills/<task_name>/` 已存在且确认要覆盖：
+
+```powershell
+uv run bua-cua generate-skill <task_name> --overwrite
+```
+
+该命令会读取 `prompts/task_skill_generation.md`、`intent.md`、`codegen.spec.ts` 和 `trace_evidence.json`，调用 `.env` 中配置的模型生成 Skill 文件。Codex/agent 不应手写任务脚本内容，只负责运行命令、校验和反馈错误。
 
 生成目标目录：
 
@@ -234,7 +246,7 @@ skills/<task_name>/
 
 - 是否保留了 codegen 中的人类业务顺序。
 - 是否按页面状态转换切分 step。
-- 每个关键业务 step 是否有 Playwright primary、Midscene fallback 和 verifier。
+- 每个关键网页操作 step 是否使用 `ctx.withRecovery`，并包含 Playwright primary、recoveryOptions、Midscene fallback 和 verifier。
 - 是否识别并替换了明显不稳定 locator，例如动态 id、长随机 class、深层 CSS 链、过度 `nth()`。
 - 是否只参数化业务数据，例如 NE 名称、搜索关键字、业务对象名、tab、字段、筛选值。
 - 是否没有硬编码模型密钥。
@@ -270,22 +282,31 @@ await agent.aiTap('点击拓扑画布中的目标 NE 节点');
 await agent.aiAssert('E-Line Service 页面已经打开');
 ```
 
-业务步骤优先使用：
+有 Playwright primary path 的业务步骤优先使用：
 
 ```ts
-await ctx.withFallback(
+await ctx.withRecovery(
   '搜索目标 NE',
   async () => {
     // Playwright primary path
   },
+  {
+    goal: '搜索目标 NE 并展示搜索结果',
+    hints: ['只处理当前 step，不重新规划整个任务'],
+    allowedTools: ['viewportScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+    maxTurns: 6,
+    risk: 'read_only',
+  },
   async () => {
-    // Midscene visual fallback
+    // Midscene visual fallback after recovery fails or is unavailable
   },
   async () => {
     // verifier
   },
 );
 ```
+
+只有纯本地处理、纯断言或明确不允许 recovery 的高风险步骤，才使用 `ctx.withFallback`。
 
 没有 Playwright primary path 的真实网站实验可以使用：
 

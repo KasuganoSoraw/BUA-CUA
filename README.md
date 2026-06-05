@@ -224,7 +224,7 @@ inputs/arxiv-demo/trace/
 
 ### 生成 Task Skill
 
-当前 MVP 没有自动 LLM 生成命令。生成 Task Skill 时，让 agent 同时读取：
+生成 Task Skill 时，模型应同时读取：
 
 ```text
 prompts/task_skill_generation.md
@@ -233,6 +233,18 @@ inputs/<task>/codegen.spec.ts
 inputs/<task>/recording/recording.json  # 可选 raw evidence
 inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
 inputs/<task>/trace/trace_evidence.json # 必须，工程事实层
+```
+
+可以使用 Qwen/OpenAI-compatible 模型自动生成：
+
+```powershell
+uv run bua-cua generate-skill <task>
+```
+
+如果 `skills/<task>/` 已存在且确认要覆盖：
+
+```powershell
+uv run bua-cua generate-skill <task> --overwrite
 ```
 
 并生成：
@@ -301,3 +313,5 @@ uv run bua-cua run-skill clinical_trials_download_recovery --args .\skills\clini
 
 - `ctx.withRecovery`：有 Playwright primary，失败后才启动 step recovery agent。
 - `ctx.recoverStep`：没有 Playwright primary，当前 step 直接由 step recovery agent 执行，适合无 codegen 的 recovery-driven Task Skill。
+
+由 Playwright codegen 派生的普通 Task Skill，网页操作步骤也应默认使用 `ctx.withRecovery`，链路为 `Playwright primary -> step recovery agent/CDP -> Midscene fallback -> verifier`。`ctx.withFallback` 只适合纯本地处理、纯断言或明确不允许 recovery 的高风险步骤。

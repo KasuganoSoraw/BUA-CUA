@@ -10,7 +10,7 @@
 4. 可选的 enhanced recorder raw evidence，例如 `inputs/<task>/recording/recording.json`、`actions/*.json` 和截图。
 5. 可选的 Playwright trace evidence 原始包，例如 `inputs/<task>/trace/trace.zip`，用于必要时查看细节。
 
-你必须一次性输出且只输出四个文件的内容：`skill.json`、`SKILL.md`、`INFERRED_INTENT.md`、`index.ts`。
+你必须一次性输出且只输出五个文件的内容：`skill.json`、`SKILL.md`、`INFERRED_INTENT.md`、`index.ts`、`fixtures/input.example.json`。
 
 其中 `INFERRED_INTENT.md` 是模型根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 recorder evidence 推测出的任务意图与步骤理解。它不是工程事实层，不得写成“用户明确说过”。如果用户的 `intent.md` 很简略或为空，应明确说明哪些内容是根据轨迹推断出来的。
 
@@ -31,13 +31,32 @@ await agent.aiTap('the target NE node on the topology canvas');
 await agent.aiAssert('the E-Line Service page is open');
 ```
 
-每个业务语义步骤优先使用 `ctx.withFallback(name, primary, fallback, verify)`：
+每个有网页操作的业务语义步骤默认使用 `ctx.withRecovery(name, primary, recoveryOptions, midsceneFallback, verify)`，执行链路必须是：
+
+```text
+Playwright primary
+  -> primary 失败时启动 step recovery agent，使用 CDP/DOM/截图工具尝试完成当前 step
+  -> recovery 失败或未配置模型时再进入 Midscene fallback
+  -> 最后执行 verifier
+```
+
+示例：
 
 ```ts
-await ctx.withFallback(
+await ctx.withRecovery(
   'Open target NE',
   async () => {
     await page.getByRole('row', { name: neName }).dblclick();
+  },
+  {
+    goal: `打开名为 ${neName} 的 NE 详情页`,
+    hints: [
+      '只处理当前 step，不重新规划整个任务',
+      '优先使用当前页面局部 DOM、locator 证据和截图判断目标控件',
+    ],
+    allowedTools: ['viewportScreenshot', 'jsProbe', 'inspectAt', 'domAct', 'clickAt'],
+    maxTurns: 6,
+    risk: 'read_only',
   },
   async () => {
     await agent.aiTap(`open the NE named ${neName}`);
@@ -47,6 +66,14 @@ await ctx.withFallback(
   },
 );
 ```
+
+只有以下情况可以使用 `ctx.withFallback`：
+
+- 该 step 没有真实网页交互，只是本地文件处理、参数转换或纯 Playwright assertion；
+- 该 step 的 primary 失败后不适合由 recovery agent 自主尝试，例如高风险写操作；
+- 用户或 Skill 文档明确要求跳过 recovery。
+
+没有稳定 Playwright primary path 的网页操作步骤可以使用 `ctx.recoverStep(name, recoveryOptions, midsceneFallback, verify)`，但普通 codegen 派生的 Task Skill 应优先使用 `ctx.withRecovery`。
 
 不要创建另一套动作 DSL。不要把所有 Playwright/Midscene API 再包装成自定义点击、输入、断言函数。
 
@@ -62,6 +89,7 @@ await ctx.withFallback(
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；
+  - step recovery agent 配置；
   - Midscene 视觉 fallback；
   - 有意义时，对达成后的业务状态做 verifier。
 - 优先使用稳定 Playwright locator：
@@ -76,8 +104,10 @@ await ctx.withFallback(
   - 深层 CSS 层级链；
   - 过度依赖 `nth()`；
   - 框架生成的选择器。
-- 如果无法推断稳定 locator，应将 Midscene 作为该步骤的 fallback，必要时作为该步骤主操作。
+- 如果无法推断稳定 locator，应优先在 `ctx.withRecovery` 的 `recoveryOptions.hints` 中写清当前 step 的目标和证据，让 recovery agent 尝试用 `jsProbe`、`inspectAt`、`domAct`、`clickAt` 等工具完成；Midscene 应作为 recovery 之后的兜底，而不是第一 fallback。
 - 生成 verifier 时优先参考动作后的业务状态变化，例如 URL 变化、关键文本出现、筛选 chip 可见、下载文件存在、弹窗打开或表格内容变化；不要只验证“点击动作已执行”。
+- verifier 不得把隐藏元素当作成功条件。使用文本 verifier 时，应确认目标文本是用户可见状态；如果页面存在同名隐藏 radio/label/template，应改用 `locator.filter({ hasText })` 缩小到可见业务区域、验证 checkbox/radio `checked` 状态、URL 参数、下载事件或结果卡片状态。
+- 对动态 SPA 页面，避免要求短暂 loading 文本“必须先出现”。更稳的 verifier 是等待最终状态，例如 URL 参数稳定、结果卡片可见、筛选 chip/计数可见、下载事件触发。
 - 只参数化业务数据：
   - NE 名称；
   - 搜索关键字；
@@ -101,6 +131,12 @@ await ctx.withFallback(
 - `inferredIntent`：通常为 `"INFERRED_INTENT.md"`
 - `risk`
 - `argsSchema`
+
+`risk` 只能使用以下枚举值之一，不得输出其他值：
+
+- `"read_only"`：只读查询、筛选、导出或下载公开/允许访问的数据。
+- `"write_review_required"`：会提交表单、创建、修改配置或影响远程系统状态。
+- `"destructive_review_required"`：删除、重启、清空、覆盖、不可逆操作。
 
 可选字段：
 
@@ -171,3 +207,9 @@ await ctx.withFallback(
   - `打开 E-Line Service`；
   - `切换到 QOS 页签`；
   - `提取目标字段`。
+
+## `fixtures/input.example.json` 要求
+
+- 必须匹配 `skill.json` 中的 `argsSchema`。
+- 只包含运行该 Task Skill 所需的业务参数。
+- 示例值应优先来自 codegen 和 trace 中出现的真实录制值；如果是模型推断，应在 `INFERRED_INTENT.md` 的不确定点中说明。

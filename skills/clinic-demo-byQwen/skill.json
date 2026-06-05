@@ -1,0 +1,19 @@
+{
+  "name": "clinic-demo",
+  "type": "task",
+  "version": "1.0.0",
+  "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
+  "risk": "read_only",
+  "description": "在 ClinicalTrials.gov 上搜索特定疾病，应用状态、性别和年龄筛选，选择目标临床试验记录并下载结果。",
+  "argsSchema": {
+    "type": "object",
+    "properties": {
+      "condition": { "type": "string", "description": "疾病或条件名称，例如 Diabetes" },
+      "status": { "type": "string", "description": "研究状态筛选，例如 Recruiting and not yet" },
+      "gender": { "type": "string", "description": "性别筛选，例如 Male" },
+      "ageGroup": { "type": "string", "description": "年龄组筛选，例如 Child (birth - 17)" }
+    },
+    "required": ["condition"]
+  }
+}

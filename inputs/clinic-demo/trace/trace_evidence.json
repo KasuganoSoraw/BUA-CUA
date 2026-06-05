@@ -1,0 +1,840 @@
+{
+  "schemaVersion": 1,
+  "taskName": "clinic-demo",
+  "traceZip": "inputs/clinic-demo/trace/trace.zip",
+  "sourceCodegen": "inputs/clinic-demo/codegen.spec.ts",
+  "generatedAt": "2026-06-05T11:51:23+0800",
+  "traceStatus": "passed",
+  "coverage": {
+    "codegenActionCount": 14,
+    "traceActionCount": 14,
+    "failedActionIndex": null,
+    "coveredCodegenActions": 14,
+    "uncoveredCodegenActions": []
+  },
+  "actions": [
+    {
+      "id": "call@8",
+      "codegenActionIndex": 0,
+      "source": {
+        "line": 4,
+        "text": "await page.goto('https://clinicaltrials.gov/');"
+      },
+      "method": "goto",
+      "class": "Frame",
+      "params": {
+        "url": "https://clinicaltrials.gov/",
+        "timeout": 0,
+        "waitUntil": "load"
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 6314.456,
+        "endTime": 9596.252
+      },
+      "snapshots": {
+        "before": "before@call@8",
+        "action": null,
+        "after": "after@call@8"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-8-before.jpeg",
+        "action": "evidence-images/call-8-action.jpeg",
+        "after": "evidence-images/call-8-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "about:blank",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": true,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Show glossary",
+          "Search for terms",
+          "Hide glossary",
+          "Study record managers: refer to the",
+          "Data Element Definitions",
+          "if submitting registration or results information.",
+          "Accepts healthy volunteers",
+          "A type of",
+          "eligibility criteria",
+          "that indicates whether people who do not have the",
+          "condition/disease",
+          "being studied can participate in that clinical study."
+        ]
+      },
+      "resolvedHtml": null,
+      "logs": [
+        "navigating to \"https://clinicaltrials.gov/\", waiting until \"load\""
+      ],
+      "error": null
+    },
+    {
+      "id": "call@10",
+      "codegenActionIndex": 1,
+      "source": {
+        "line": 5,
+        "text": "await page.getByRole('combobox', { name: 'Condition/disease' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=combobox[name=\"Condition/disease\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 640,
+        "y": 565.29,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 9790.234,
+        "endTime": 10006.561
+      },
+      "snapshots": {
+        "before": "before@call@10",
+        "action": "input@call@10",
+        "after": "after@call@10"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-10-before.jpeg",
+        "action": "evidence-images/call-10-action.jpeg",
+        "after": "evidence-images/call-10-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
+      "logs": [
+        "waiting for getByRole('combobox', { name: 'Condition/disease' })",
+        "locator resolved to <input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@12",
+      "codegenActionIndex": 2,
+      "source": {
+        "line": 6,
+        "text": "await page.getByRole('combobox', { name: 'Condition/disease' }).fill('dia');"
+      },
+      "method": "fill",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=combobox[name=\"Condition/disease\"i]",
+        "strict": true,
+        "value": "dia",
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 10040.628,
+        "endTime": 10119.724
+      },
+      "snapshots": {
+        "before": "before@call@12",
+        "action": "input@call@12",
+        "after": "after@call@12"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-12-before.jpeg",
+        "action": "evidence-images/call-12-action.jpeg",
+        "after": "evidence-images/call-12-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
+      "logs": [
+        "waiting for getByRole('combobox', { name: 'Condition/disease' })",
+        "locator resolved to <input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
+        "fill(\"dia\")",
+        "attempting fill action",
+        "waiting for element to be visible, enabled and editable"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@14",
+      "codegenActionIndex": 3,
+      "source": {
+        "line": 7,
+        "text": "await page.getByRole('option', { name: 'Diabetes', exact: true }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=option[name=\"Diabetes\"s]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 640,
+        "y": 654.79,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 10140.873,
+        "endTime": 11088.041
+      },
+      "snapshots": {
+        "before": "before@call@14",
+        "action": "input@call@14",
+        "after": "after@call@14"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-14-before.jpeg",
+        "action": "evidence-images/call-14-action.jpeg",
+        "after": "evidence-images/call-14-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<mat-option role=\"option\" id=\"mat-option-23\" aria-selected=\"false\" aria-disabled=\"false\" _ngcontent-ng-c1749608328=\"\" class=\"mat-mdc-option mdc-list-item usa-combo-box__list-option\">…</mat-option>",
+      "logs": [
+        "waiting for getByRole('option', { name: 'Diabetes', exact: true })",
+        "locator resolved to <mat-option role=\"option\" id=\"mat-option-23\" aria-selected=\"false\" aria-disabled=\"false\" _ngcontent-ng-c1749608328=\"\" class=\"mat-mdc-option mdc-list-item usa-combo-box__list-option\">…</mat-option>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@16",
+      "codegenActionIndex": 4,
+      "source": {
+        "line": 8,
+        "text": "await page.getByText('Recruiting and not yet').click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:text=\"Recruiting and not yet\"i",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 640.5,
+        "y": 359.99,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 11104.371,
+        "endTime": 11188.18
+      },
+      "snapshots": {
+        "before": "before@call@16",
+        "action": "input@call@16",
+        "after": "after@call@16"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-16-before.jpeg",
+        "action": "evidence-images/call-16-action.jpeg",
+        "after": "evidence-images/call-16-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<label for=\"adv-radio-status1\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
+      "logs": [
+        "waiting for getByText('Recruiting and not yet')",
+        "locator resolved to <label for=\"adv-radio-status1\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@18",
+      "codegenActionIndex": 5,
+      "source": {
+        "line": 9,
+        "text": "await page.getByRole('button', { name: 'Search' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=button[name=\"Search\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 949.5,
+        "y": 467.29,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 11205.839,
+        "endTime": 11351.417
+      },
+      "snapshots": {
+        "before": "before@call@18",
+        "action": "input@call@18",
+        "after": "after@call@18"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-18-before.jpeg",
+        "action": "evidence-images/call-18-action.jpeg",
+        "after": "evidence-images/call-18-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<button _ngcontent-ng-c1977509329=\"\" class=\"usa-button search-button primary-button height-full float-right\"> Search </button>",
+      "logs": [
+        "waiting for getByRole('button', { name: 'Search' })",
+        "locator resolved to <button _ngcontent-ng-c1977509329=\"\" class=\"usa-button search-button primary-button height-full float-right\"> Search </button>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@20",
+      "codegenActionIndex": 6,
+      "source": {
+        "line": 10,
+        "text": "await page.getByText('Male (2,623)').click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:text=\"Male (2,623)\"i",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 187,
+        "y": 361.39,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 11367.505,
+        "endTime": 13170.093
+      },
+      "snapshots": {
+        "before": "before@call@20",
+        "action": "input@call@20",
+        "after": "after@call@20"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-20-before.jpeg",
+        "action": "evidence-images/call-20-action.jpeg",
+        "after": "evidence-images/call-20-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=status:not%20rec&viewType=Card",
+        "urlChanged": true,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Clear Filters (4)"
+        ]
+      },
+      "resolvedHtml": "<label for=\"adv-radio-sex2\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
+      "logs": [
+        "waiting for getByText('Male (2,623)')",
+        "locator resolved to <label for=\"adv-radio-sex2\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@22",
+      "codegenActionIndex": 7,
+      "source": {
+        "line": 11,
+        "text": "await page.getByText('Child (birth - 17) (399)').click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:text=\"Child (birth - 17) (399)\"i",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 203,
+        "y": 469.08,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 13189.656,
+        "endTime": 13270.295
+      },
+      "snapshots": {
+        "before": "before@call@22",
+        "action": "input@call@22",
+        "after": "after@call@22"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-22-before.jpeg",
+        "action": "evidence-images/call-22-action.jpeg",
+        "after": "evidence-images/call-22-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Clear Filters (5)"
+        ]
+      },
+      "resolvedHtml": "<label for=\"adv-check-age-0\" _ngcontent-ng-c956280390=\"\" class=\"usa-checkbox__label\">…</label>",
+      "logs": [
+        "waiting for getByText('Child (birth - 17) (399)')",
+        "locator resolved to <label for=\"adv-check-age-0\" _ngcontent-ng-c956280390=\"\" class=\"usa-checkbox__label\">…</label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@24",
+      "codegenActionIndex": 8,
+      "source": {
+        "line": 12,
+        "text": "await page.getByRole('button', { name: 'Apply Filters' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=button[name=\"Apply Filters\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 259.68,
+        "y": 671.07,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 13291.35,
+        "endTime": 13508.838
+      },
+      "snapshots": {
+        "before": "before@call@24",
+        "action": "input@call@24",
+        "after": "after@call@24"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-24-before.jpeg",
+        "action": "evidence-images/call-24-action.jpeg",
+        "after": "evidence-images/call-24-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": true,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Loading results…"
+        ]
+      },
+      "resolvedHtml": "<button type=\"button\" id=\"apply-filters\" _ngcontent-ng-c1605468333=\"\" class=\"usa-button primary-button\">Apply Filters</button>",
+      "logs": [
+        "waiting for getByRole('button', { name: 'Apply Filters' })",
+        "locator resolved to <button type=\"button\" id=\"apply-filters\" _ngcontent-ng-c1605468333=\"\" class=\"usa-button primary-button\">Apply Filters</button>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@26",
+      "codegenActionIndex": 9,
+      "source": {
+        "line": 13,
+        "text": "await page.locator('.selection > .usa-checkbox__label').first().click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": ".selection > .usa-checkbox__label >> nth=0",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 389.96,
+        "y": 256.88,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 13531.792,
+        "endTime": 14439.096
+      },
+      "snapshots": {
+        "before": "before@call@26",
+        "action": "input@call@26",
+        "after": "after@call@26"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-26-before.jpeg",
+        "action": "evidence-images/call-26-action.jpeg",
+        "after": "evidence-images/call-26-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Clear (1)",
+          "1 selected"
+        ]
+      },
+      "resolvedHtml": "<label for=\"hit-sel-0\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+      "logs": [
+        "waiting for locator('.selection > .usa-checkbox__label').first()",
+        "locator resolved to <label for=\"hit-sel-0\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@28",
+      "codegenActionIndex": 10,
+      "source": {
+        "line": 14,
+        "text": "await page.locator('ctg-search-hit-card:nth-child(4) > .usa-card__container > .headline > .selection > .usa-checkbox__label').click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "ctg-search-hit-card:nth-child(4) > .usa-card__container > .headline > .selection > .usa-checkbox__label",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 389.96,
+        "y": 544.21,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 14458.174,
+        "endTime": 14536.305
+      },
+      "snapshots": {
+        "before": "before@call@28",
+        "action": "input@call@28",
+        "after": "after@call@28"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-28-before.jpeg",
+        "action": "evidence-images/call-28-action.jpeg",
+        "after": "evidence-images/call-28-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Clear (2)",
+          "2 selected"
+        ]
+      },
+      "resolvedHtml": "<label for=\"hit-sel-1\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+      "logs": [
+        "waiting for locator('ctg-search-hit-card:nth-child(4) > .usa-card__container > .headline > .selection > .usa-checkbox__label')",
+        "locator resolved to <label for=\"hit-sel-1\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@30",
+      "codegenActionIndex": 11,
+      "source": {
+        "line": 15,
+        "text": "await page.locator('ctg-search-hit-card:nth-child(5) > .usa-card__container > .headline > .selection > .usa-checkbox__label').click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "ctg-search-hit-card:nth-child(5) > .usa-card__container > .headline > .selection > .usa-checkbox__label",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 389.96,
+        "y": 360.13,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 14554.562,
+        "endTime": 14648.439
+      },
+      "snapshots": {
+        "before": "before@call@30",
+        "action": "input@call@30",
+        "after": "after@call@30"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-30-before.jpeg",
+        "action": "evidence-images/call-30-action.jpeg",
+        "after": "evidence-images/call-30-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Clear (3)",
+          "Back to Top",
+          "3 selected"
+        ]
+      },
+      "resolvedHtml": "<label for=\"hit-sel-2\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+      "logs": [
+        "waiting for locator('ctg-search-hit-card:nth-child(5) > .usa-card__container > .headline > .selection > .usa-checkbox__label')",
+        "locator resolved to <label for=\"hit-sel-2\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@32",
+      "codegenActionIndex": 12,
+      "source": {
+        "line": 16,
+        "text": "await page.getByLabel('download', { exact: true }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:label=\"download\"s",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 539.63,
+        "y": 29,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 14669.299,
+        "endTime": 14770.698
+      },
+      "snapshots": {
+        "before": "before@call@32",
+        "action": "input@call@32",
+        "after": "after@call@32"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-32-before.jpeg",
+        "action": "evidence-images/call-32-action.jpeg",
+        "after": "evidence-images/call-32-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<button title=\"Download\" aria-hidden=\"true\" data-open-modal=\"\" aria-label=\"download\" _ngcontent-ng-c2100333746=\"\" id=\"action-bar-download-btn\" aria-controls=\"download-modal\" class=\"action-bar-button secondary-button\">…</button>",
+      "logs": [
+        "waiting for getByLabel('download', { exact: true })",
+        "locator resolved to <button title=\"Download\" aria-hidden=\"true\" data-open-modal=\"\" aria-label=\"download\" _ngcontent-ng-c2100333746=\"\" id=\"action-bar-download-btn\" aria-controls=\"download-modal\" class=\"action-bar-button secondary-button\">…</button>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@37",
+      "codegenActionIndex": 13,
+      "source": {
+        "line": 18,
+        "text": "await page.getByRole('button', { name: 'Download' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=button[name=\"Download\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 377.14,
+        "y": 654.18,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 14797.914,
+        "endTime": 15034.074
+      },
+      "snapshots": {
+        "before": "before@call@37",
+        "action": "input@call@37",
+        "after": "after@call@37"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-37-before.jpeg",
+        "action": "evidence-images/call-37-action.jpeg",
+        "after": "evidence-images/call-37-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<button type=\"button\" data-close-modal=\"\" _ngcontent-ng-c2100333746=\"\" class=\"usa-button primary-button\"> Download </button>",
+      "logs": [
+        "waiting for getByRole('button', { name: 'Download' })",
+        "locator resolved to <button type=\"button\" data-close-modal=\"\" _ngcontent-ng-c2100333746=\"\" class=\"usa-button primary-button\"> Download </button>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    }
+  ],
+  "failure": null,
+  "notes": [
+    "This file contains engineering-extracted facts from Playwright trace.zip.",
+    "It does not contain model-generated semantic step descriptions.",
+    "inputPoint coordinates are viewport-local and should be interpreted with the selected action frame.",
+    "selectedFrames are sampled from Playwright screencast frames and are auxiliary visual evidence."
+  ]
+}

@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from bua_cua_tools.generate import command_generate_skill, command_model_preflight
 from bua_cua_tools.trace import command_summarize_trace, command_trace_codegen
 
 
@@ -155,6 +156,9 @@ def validate_skill(path: Path) -> list[str]:
 
     if manifest.get("type") != "task":
         errors.append("skill.json field `type` must be `task`")
+
+    if manifest.get("risk") not in {"read_only", "write_review_required", "destructive_review_required"}:
+        errors.append("skill.json field `risk` must be one of read_only, write_review_required, destructive_review_required")
 
     entry = manifest.get("entry")
     if not isinstance(entry, str):
@@ -314,6 +318,15 @@ def build_parser() -> argparse.ArgumentParser:
     summarize.add_argument("task")
     summarize.add_argument("--trace", help="optional path to trace.zip; defaults to inputs/<task>/trace/trace.zip")
     summarize.set_defaults(func=command_summarize_trace)
+
+    generate = subparsers.add_parser("generate-skill", help="generate a Task Skill from intent, codegen, and trace evidence")
+    generate.add_argument("task")
+    generate.add_argument("--overwrite", action="store_true", help="overwrite an existing non-empty skills/<task> directory")
+    generate.set_defaults(func=command_generate_skill)
+
+    preflight = subparsers.add_parser("model-preflight", help="check OpenAI-compatible model connectivity")
+    preflight.add_argument("--timeout", type=int, default=180, help="request timeout in seconds")
+    preflight.set_defaults(func=command_model_preflight)
 
     return parser
 
