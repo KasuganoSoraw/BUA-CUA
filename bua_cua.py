@@ -8,6 +8,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +69,73 @@ def command_scaffold_input(args: argparse.Namespace) -> int:
 
     print(f"Input pack ready: {target}")
     return 0
+
+
+def ensure_input_pack(task: str) -> Path:
+    target = ROOT / "inputs" / task
+    target.mkdir(parents=True, exist_ok=True)
+
+    files = {
+        "intent.md": "# Task Intent\n\nDescribe the business task and its parameters here.\n",
+        "codegen.spec.ts": "// Paste Playwright codegen output here.\n",
+        "steps.md": "# Optional Human Steps\n\nAdd clarifying business steps if needed.\n",
+    }
+    for filename, content in files.items():
+        path = target / filename
+        if not path.exists():
+            path.write_text(content, encoding="utf-8")
+    return target
+
+
+def is_placeholder_codegen(path: Path) -> bool:
+    if not path.exists():
+        return True
+    content = path.read_text(encoding="utf-8", errors="replace").strip()
+    return not content or content == "// Paste Playwright codegen output here."
+
+
+def command_codegen(args: argparse.Namespace) -> int:
+    target = ensure_input_pack(args.task)
+    output = target / "codegen.spec.ts"
+    if output.exists() and not is_placeholder_codegen(output) and not args.overwrite:
+        backup = target / f"codegen.spec.{int(time.time())}.bak.ts"
+        shutil.move(output, backup)
+        print(f"Existing codegen backed up: {backup}")
+
+    playwright = ROOT / "node_modules" / ".bin" / ("playwright.cmd" if sys.platform == "win32" else "playwright")
+    if not playwright.exists():
+        print("ERROR: Could not find local Playwright CLI. Run npm install first.", file=sys.stderr)
+        return 1
+
+    cmd = [
+        str(playwright),
+        "codegen",
+        "--target",
+        args.target,
+        "--output",
+        str(output.resolve()),
+    ]
+    if args.browser:
+        cmd.extend(["--browser", args.browser])
+    if args.channel:
+        cmd.extend(["--channel", args.channel])
+    if args.user_data_dir:
+        cmd.extend(["--user-data-dir", str(Path(args.user_data_dir).resolve())])
+    if args.load_storage:
+        cmd.extend(["--load-storage", str(Path(args.load_storage).resolve())])
+    if args.save_storage:
+        cmd.extend(["--save-storage", str(Path(args.save_storage).resolve())])
+    if args.viewport_size:
+        cmd.extend(["--viewport-size", args.viewport_size])
+    if args.ignore_https_errors:
+        cmd.append("--ignore-https-errors")
+    if args.url:
+        cmd.append(args.url)
+
+    print(f"Input pack ready: {target}")
+    print(f"Codegen output: {output}")
+    completed = subprocess.run(cmd, cwd=ROOT)
+    return completed.returncode
 
 
 def validate_skill(path: Path) -> list[str]:
@@ -196,6 +264,20 @@ def build_parser() -> argparse.ArgumentParser:
     scaffold = subparsers.add_parser("scaffold-input", help="create an input pack")
     scaffold.add_argument("task")
     scaffold.set_defaults(func=command_scaffold_input)
+
+    codegen = subparsers.add_parser("codegen", help="create an input pack and run Playwright codegen into codegen.spec.ts")
+    codegen.add_argument("task")
+    codegen.add_argument("--url", help="optional start URL for Playwright codegen")
+    codegen.add_argument("--target", default="playwright-test", help="Playwright codegen target, default: playwright-test")
+    codegen.add_argument("--browser", help="browser type, for example chromium, firefox, or webkit")
+    codegen.add_argument("--channel", help="optional Chromium channel, for example chrome or msedge")
+    codegen.add_argument("--user-data-dir", help="optional persistent browser profile directory")
+    codegen.add_argument("--load-storage", help="optional storage state file to load")
+    codegen.add_argument("--save-storage", help="optional storage state file to save")
+    codegen.add_argument("--viewport-size", help="browser viewport size, for example 1280,720")
+    codegen.add_argument("--ignore-https-errors", action="store_true")
+    codegen.add_argument("--overwrite", action="store_true", help="overwrite existing codegen.spec.ts without creating a backup")
+    codegen.set_defaults(func=command_codegen)
 
     validate = subparsers.add_parser("validate-skill", help="validate a skill manifest")
     validate.add_argument("skill")

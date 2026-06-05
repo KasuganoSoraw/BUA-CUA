@@ -98,18 +98,32 @@ inputs/arxiv-demo/
 
 `intent.md` 写用户自然语言任务意图，`codegen.spec.ts` 放 Playwright codegen 录制脚本。
 
+如果你已经准备开始官方 Playwright codegen 录制，通常不需要先手动执行 `scaffold-input`，可以直接使用下面的一键命令。
+
 ### 启动 Playwright codegen 录制
 
-录制到指定输入包：
+推荐使用 Toolkit 封装命令。它会自动创建 `inputs/<task>/`，并把官方 Playwright codegen 输出保存到 `inputs/<task>/codegen.spec.ts`：
 
 ```powershell
-npx playwright codegen --target=typescript -o .\inputs\arxiv-demo\codegen.spec.ts
+uv run bua-cua codegen arxiv-demo --url https://arxiv.org/
 ```
 
-从指定网址开始录制：
+如果 `codegen.spec.ts` 已经存在且不是占位内容，该命令会先备份旧文件，再启动录制。若确认要直接覆盖：
 
 ```powershell
-npx playwright codegen --target=typescript -o .\inputs\arxiv-demo\codegen.spec.ts https://arxiv.org/
+uv run bua-cua codegen arxiv-demo --url https://arxiv.org/ --overwrite
+```
+
+对容易触发安全验证的网站，可以指定真实浏览器 channel 和独立持久化 profile：
+
+```powershell
+uv run bua-cua codegen arxiv-demo --url https://arxiv.org/ --channel chrome --user-data-dir .\auth\codegen-chrome-profile
+```
+
+底层仍然使用官方 Playwright codegen。需要直接调用官方命令时，可以使用：
+
+```powershell
+npx playwright codegen --target=playwright-test -o .\inputs\arxiv-demo\codegen.spec.ts https://arxiv.org/
 ```
 
 ### 启动 enhanced recorder 证据录制

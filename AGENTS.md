@@ -106,13 +106,31 @@ uv run bua-cua run-skill mock_query_eline_service_info --args .\skills\mock_quer
 uv run bua-cua scaffold-input <task_name>
 ```
 
+如果已经准备开始官方 Playwright codegen 录制，也可以直接使用一键命令，它会自动创建输入包并把录制脚本写入 `inputs/<task_name>/codegen.spec.ts`：
+
+```powershell
+uv run bua-cua codegen <task_name> --url <start_url>
+```
+
+已有 `codegen.spec.ts` 且不是占位内容时，该命令会先备份旧文件。确认要覆盖时使用：
+
+```powershell
+uv run bua-cua codegen <task_name> --url <start_url> --overwrite
+```
+
+对容易触发安全验证的网站，可以指定真实浏览器 channel 和独立持久化 profile：
+
+```powershell
+uv run bua-cua codegen <task_name> --url <start_url> --channel chrome --user-data-dir .\auth\codegen-chrome-profile
+```
+
 2. 填写自然语言任务描述：
 
 ```text
 inputs/<task_name>/intent.md
 ```
 
-3. 粘贴 Playwright codegen 录制脚本：
+3. 检查 Playwright codegen 录制脚本：
 
 ```text
 inputs/<task_name>/codegen.spec.ts
