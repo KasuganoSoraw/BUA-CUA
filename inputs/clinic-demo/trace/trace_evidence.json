@@ -3,7 +3,7 @@
   "taskName": "clinic-demo",
   "traceZip": "inputs/clinic-demo/trace/trace.zip",
   "sourceCodegen": "inputs/clinic-demo/codegen.spec.ts",
-  "generatedAt": "2026-06-05T11:51:23+0800",
+  "generatedAt": "2026-06-08T10:37:42+0800",
   "traceStatus": "passed",
   "coverage": {
     "codegenActionCount": 14,
@@ -61,8 +61,193 @@
           "that indicates whether people who do not have the",
           "condition/disease",
           "being studied can participate in that clinical study."
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [
+            ", or no intervention, according to the trial's",
+            "A general description of the clinical trial arm. It identifies the role of the intervention that participants receive. Types of arms include",
+            "A group or subgroup of participants in a clinical trial that receives a specific",
+            "A measure of all deaths, due to any cause, that occur during a clinical study.",
+            "A method used to assign participants to an arm of a clinical study. The types of allocation are",
+            "A type of",
+            "Accepts healthy volunteers",
+            "Active comparator arm",
+            "Adult (18-64)",
+            "Adverse event",
+            "Age or age group",
+            "All-cause mortality",
+            "Allocation",
+            "An",
+            "An unfavorable change in the health of a participant, including abnormal laboratory findings, that happens during a clinical study or within a certain amount of time after the study has ended. This change may or may not be caused by the",
+            "Arm",
+            "Arm type",
+            "Child (birth-17)",
+            "Data Element Definitions",
+            "Hide glossary"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Show glossary",
+              "count": 3,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Hide glossary",
+              "count": 3,
+              "hiddenCount": 3
+            },
+            {
+              "text": "Data Element Definitions",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "Accepts healthy volunteers",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "eligibility criteria",
+              "count": 6,
+              "hiddenCount": 6
+            },
+            {
+              "text": "condition/disease",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "arm type",
+              "count": 5,
+              "hiddenCount": 5
+            },
+            {
+              "text": "intervention/treatment",
+              "count": 10,
+              "hiddenCount": 10
+            },
+            {
+              "text": "protocol",
+              "count": 9,
+              "hiddenCount": 9
+            },
+            {
+              "text": "quality control (QC) review",
+              "count": 9,
+              "hiddenCount": 9
+            },
+            {
+              "text": "study record",
+              "count": 17,
+              "hiddenCount": 17
+            },
+            {
+              "text": "Food and Drug Administration Amendments Act of 2007, Section 801 (FDAAA 801)",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "principal investigator",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "Delay Results Type",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "certification",
+              "count": 4,
+              "hiddenCount": 4
+            },
+            {
+              "text": "extension request",
+              "count": 4,
+              "hiddenCount": 4
+            },
+            {
+              "text": "interventional studies",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "observational studies",
+              "count": 3,
+              "hiddenCount": 3
+            },
+            {
+              "text": "Collaborator",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "sponsor",
+              "count": 2,
+              "hiddenCount": 2
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Show glossary",
+              "count": 3,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Hide glossary",
+              "count": 3,
+              "hiddenCount": 3
+            },
+            {
+              "text": "Data Element Definitions",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "Accepts healthy volunteers",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "eligibility criteria",
+              "count": 6,
+              "hiddenCount": 6
+            },
+            {
+              "text": "condition/disease",
+              "count": 2,
+              "hiddenCount": 2
+            },
+            {
+              "text": "arm type",
+              "count": 5,
+              "hiddenCount": 5
+            },
+            {
+              "text": "intervention/treatment",
+              "count": 10,
+              "hiddenCount": 10
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": null,
       "logs": [
         "navigating to \"https://clinicaltrials.gov/\", waiting until \"load\""
@@ -109,8 +294,22 @@
         "afterUrl": "https://clinicaltrials.gov/",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [],
       "resolvedHtml": "<input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
       "logs": [
         "waiting for getByRole('combobox', { name: 'Condition/disease' })",
@@ -163,8 +362,22 @@
         "afterUrl": "https://clinicaltrials.gov/",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [],
       "resolvedHtml": "<input id=\"advcond\" type=\"search\" placeholder=\"\" name=\"advcond\" role=\"combobox\" autocomplete=\"off\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-autocomplete=\"list\" _ngcontent-ng-c1749608328=\"\" aria-label=\"Condition/disease\" matautocompleteposition=\"below\" class=\"mat-mdc-autocomplete-trigger usa-input ng-untouched ng-pristine ng-valid\"/>",
       "logs": [
         "waiting for getByRole('combobox', { name: 'Condition/disease' })",
@@ -215,8 +428,22 @@
         "afterUrl": "https://clinicaltrials.gov/",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [],
       "resolvedHtml": "<mat-option role=\"option\" id=\"mat-option-23\" aria-selected=\"false\" aria-disabled=\"false\" _ngcontent-ng-c1749608328=\"\" class=\"mat-mdc-option mdc-list-item usa-combo-box__list-option\">…</mat-option>",
       "logs": [
         "waiting for getByRole('option', { name: 'Diabetes', exact: true })",
@@ -273,8 +500,22 @@
         "afterUrl": "https://clinicaltrials.gov/",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [],
       "resolvedHtml": "<label for=\"adv-radio-status1\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
       "logs": [
         "waiting for getByText('Recruiting and not yet')",
@@ -331,8 +572,22 @@
         "afterUrl": "https://clinicaltrials.gov/",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [],
       "resolvedHtml": "<button _ngcontent-ng-c1977509329=\"\" class=\"usa-button search-button primary-button height-full float-right\"> Search </button>",
       "logs": [
         "waiting for getByRole('button', { name: 'Search' })",
@@ -391,8 +646,127 @@
         "beforeTextSample": [],
         "afterTextSample": [
           "Clear Filters (4)"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [
+              {
+                "name": "aggFilters",
+                "before": null,
+                "after": [
+                  "status:not rec"
+                ]
+              },
+              {
+                "name": "cond",
+                "before": null,
+                "after": [
+                  "Diabetes"
+                ]
+              },
+              {
+                "name": "viewType",
+                "before": null,
+                "after": [
+                  "Card"
+                ]
+              }
+            ],
+            "added": [
+              {
+                "name": "aggFilters",
+                "before": null,
+                "after": [
+                  "status:not rec"
+                ]
+              },
+              {
+                "name": "cond",
+                "before": null,
+                "after": [
+                  "Diabetes"
+                ]
+              },
+              {
+                "name": "viewType",
+                "before": null,
+                "after": [
+                  "Card"
+                ]
+              }
+            ],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [
+            "Clear Filters (4)"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Clear Filters (4)",
+              "count": 13,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "urlQueryParam",
+          "target": "aggFilters",
+          "recommendedVerifier": "toHaveURL/query param assertion",
+          "evidence": {
+            "name": "aggFilters",
+            "before": null,
+            "after": [
+              "status:not rec"
+            ]
+          },
+          "source": "traceSnapshotUrl"
+        },
+        {
+          "kind": "urlQueryParam",
+          "target": "cond",
+          "recommendedVerifier": "toHaveURL/query param assertion",
+          "evidence": {
+            "name": "cond",
+            "before": null,
+            "after": [
+              "Diabetes"
+            ]
+          },
+          "source": "traceSnapshotUrl"
+        },
+        {
+          "kind": "urlQueryParam",
+          "target": "viewType",
+          "recommendedVerifier": "toHaveURL/query param assertion",
+          "evidence": {
+            "name": "viewType",
+            "before": null,
+            "after": [
+              "Card"
+            ]
+          },
+          "source": "traceSnapshotUrl"
+        },
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Clear Filters (4)",
+              "count": 13,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<label for=\"adv-radio-sex2\" class=\"usa-radio__label\" _ngcontent-ng-c1512155605=\"\">…</label>",
       "logs": [
         "waiting for getByText('Male (2,623)')",
@@ -451,8 +825,44 @@
         "beforeTextSample": [],
         "afterTextSample": [
           "Clear Filters (5)"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [
+            "Clear Filters (5)"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Clear Filters (5)",
+              "count": 13,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Clear Filters (5)",
+              "count": 13,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<label for=\"adv-check-age-0\" _ngcontent-ng-c956280390=\"\" class=\"usa-checkbox__label\">…</label>",
       "logs": [
         "waiting for getByText('Child (birth - 17) (399)')",
@@ -511,8 +921,69 @@
         "beforeTextSample": [],
         "afterTextSample": [
           "Loading results…"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [
+              {
+                "name": "aggFilters",
+                "before": [
+                  "status:not rec"
+                ],
+                "after": [
+                  "ages:child,sex:m,status:not rec"
+                ]
+              }
+            ],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [],
+          "textAddedSample": [
+            "Loading results…"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Loading results…",
+              "count": 12,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "urlQueryParam",
+          "target": "aggFilters",
+          "recommendedVerifier": "toHaveURL/query param assertion",
+          "evidence": {
+            "name": "aggFilters",
+            "before": [
+              "status:not rec"
+            ],
+            "after": [
+              "ages:child,sex:m,status:not rec"
+            ]
+          },
+          "source": "traceSnapshotUrl"
+        },
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Loading results…",
+              "count": 12,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<button type=\"button\" id=\"apply-filters\" _ngcontent-ng-c1605468333=\"\" class=\"usa-button primary-button\">Apply Filters</button>",
       "logs": [
         "waiting for getByRole('button', { name: 'Apply Filters' })",
@@ -572,8 +1043,189 @@
         "afterTextSample": [
           "Clear (1)",
           "1 selected"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [
+            {
+              "tag": "div",
+              "id": "download-modal",
+              "role": "dialog",
+              "className": "is-hidden usa-modal-wrapper",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal-overlay",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal usa-modal--lg",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__content",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__main",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": "download-modal-description",
+              "role": null,
+              "className": "usa-prose",
+              "textSample": "1 selected",
+              "hiddenByAttrs": false
+            }
+          ],
+          "textAddedSample": [
+            "1 selected",
+            "Clear (1)"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Clear (1) 1 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (1)",
+              "count": 17,
+              "hiddenCount": 0
+            },
+            {
+              "text": "1 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "dialogLikeState",
+          "target": "download-modal",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": "download-modal",
+            "role": "dialog",
+            "className": "is-hidden usa-modal-wrapper",
+            "textSample": "1 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal-overlay",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal-overlay",
+            "textSample": "1 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal usa-modal--lg",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal usa-modal--lg",
+            "textSample": "1 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__content",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__content",
+            "textSample": "1 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__main",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__main",
+            "textSample": "1 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Clear (1) 1 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (1)",
+              "count": 17,
+              "hiddenCount": 0
+            },
+            {
+              "text": "1 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<label for=\"hit-sel-0\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
       "logs": [
         "waiting for locator('.selection > .usa-checkbox__label').first()",
@@ -633,8 +1285,189 @@
         "afterTextSample": [
           "Clear (2)",
           "2 selected"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [
+            {
+              "tag": "div",
+              "id": "download-modal",
+              "role": "dialog",
+              "className": "is-hidden usa-modal-wrapper",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal-overlay",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal usa-modal--lg",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__content",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__main",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": "download-modal-description",
+              "role": null,
+              "className": "usa-prose",
+              "textSample": "2 selected",
+              "hiddenByAttrs": false
+            }
+          ],
+          "textAddedSample": [
+            "2 selected",
+            "Clear (2)"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Clear (2) 2 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (2)",
+              "count": 17,
+              "hiddenCount": 0
+            },
+            {
+              "text": "2 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "dialogLikeState",
+          "target": "download-modal",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": "download-modal",
+            "role": "dialog",
+            "className": "is-hidden usa-modal-wrapper",
+            "textSample": "2 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal-overlay",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal-overlay",
+            "textSample": "2 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal usa-modal--lg",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal usa-modal--lg",
+            "textSample": "2 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__content",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__content",
+            "textSample": "2 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__main",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__main",
+            "textSample": "2 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Clear (2) 2 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (2)",
+              "count": 17,
+              "hiddenCount": 0
+            },
+            {
+              "text": "2 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<label for=\"hit-sel-1\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
       "logs": [
         "waiting for locator('ctg-search-hit-card:nth-child(4) > .usa-card__container > .headline > .selection > .usa-checkbox__label')",
@@ -695,8 +1528,200 @@
           "Clear (3)",
           "Back to Top",
           "3 selected"
-        ]
+        ],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [
+            {
+              "tag": "div",
+              "id": "download-modal",
+              "role": "dialog",
+              "className": "is-hidden usa-modal-wrapper",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal-overlay",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal usa-modal--lg",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__content",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__main",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": "download-modal-description",
+              "role": null,
+              "className": "usa-prose",
+              "textSample": "3 selected",
+              "hiddenByAttrs": false
+            }
+          ],
+          "textAddedSample": [
+            "3 selected",
+            "Back to Top",
+            "Clear (3)"
+          ],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": [
+            {
+              "text": "Clear (3) Back to Top 3 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (3)",
+              "count": 16,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Back to Top",
+              "count": 4,
+              "hiddenCount": 0
+            },
+            {
+              "text": "3 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ]
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "dialogLikeState",
+          "target": "download-modal",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": "download-modal",
+            "role": "dialog",
+            "className": "is-hidden usa-modal-wrapper",
+            "textSample": "3 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal-overlay",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal-overlay",
+            "textSample": "3 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal usa-modal--lg",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal usa-modal--lg",
+            "textSample": "3 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__content",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__content",
+            "textSample": "3 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__main",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__main",
+            "textSample": "3 selected",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "textAmbiguityWarning",
+          "target": "duplicate visible/hidden text risk",
+          "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+          "evidence": [
+            {
+              "text": "Clear (3) Back to Top 3 selected",
+              "count": 2,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Clear (3)",
+              "count": 16,
+              "hiddenCount": 0
+            },
+            {
+              "text": "Back to Top",
+              "count": 4,
+              "hiddenCount": 0
+            },
+            {
+              "text": "3 selected",
+              "count": 9,
+              "hiddenCount": 0
+            }
+          ],
+          "source": "traceSnapshotDom"
+        }
+      ],
       "resolvedHtml": "<label for=\"hit-sel-2\" class=\"usa-checkbox__label\" _ngcontent-ng-c3806823108=\"\"> </label>",
       "logs": [
         "waiting for locator('ctg-search-hit-card:nth-child(5) > .usa-card__container > .headline > .selection > .usa-checkbox__label')",
@@ -753,8 +1778,155 @@
         "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [
+            {
+              "tag": "body",
+              "id": null,
+              "role": null,
+              "className": "usa-js-modal--active",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": "download-modal",
+              "role": "dialog",
+              "className": "usa-modal-wrapper is-visible",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal-overlay",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal usa-modal--lg",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__content",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": null,
+              "role": null,
+              "className": "usa-modal__main",
+              "textSample": "",
+              "hiddenByAttrs": false
+            },
+            {
+              "tag": "div",
+              "id": "download-modal-description",
+              "role": null,
+              "className": "usa-prose",
+              "textSample": "",
+              "hiddenByAttrs": false
+            }
+          ],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-js-modal--active",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "body",
+            "id": null,
+            "role": null,
+            "className": "usa-js-modal--active",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "download-modal",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": "download-modal",
+            "role": "dialog",
+            "className": "usa-modal-wrapper is-visible",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal-overlay",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal-overlay",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal usa-modal--lg",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal usa-modal--lg",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        },
+        {
+          "kind": "dialogLikeState",
+          "target": "usa-modal__content",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": null,
+            "role": null,
+            "className": "usa-modal__content",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        }
+      ],
       "resolvedHtml": "<button title=\"Download\" aria-hidden=\"true\" data-open-modal=\"\" aria-label=\"download\" _ngcontent-ng-c2100333746=\"\" id=\"action-bar-download-btn\" aria-controls=\"download-modal\" class=\"action-bar-button secondary-button\">…</button>",
       "logs": [
         "waiting for getByLabel('download', { exact: true })",
@@ -811,8 +1983,47 @@
         "afterUrl": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card",
         "urlChanged": false,
         "beforeTextSample": [],
-        "afterTextSample": []
+        "afterTextSample": [],
+        "delta": {
+          "queryParams": {
+            "changed": [],
+            "added": [],
+            "removed": []
+          },
+          "checkedChanges": [],
+          "valueChanges": [],
+          "dialogLikeAdded": [
+            {
+              "tag": "div",
+              "id": "download-modal",
+              "role": "dialog",
+              "className": "usa-modal-wrapper is-hidden",
+              "textSample": "",
+              "hiddenByAttrs": false
+            }
+          ],
+          "textAddedSample": [],
+          "textRemovedSample": [],
+          "duplicateTextsAfter": []
+        }
       },
+      "verifierCandidates": [
+        {
+          "kind": "dialogLikeState",
+          "target": "download-modal",
+          "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+          "evidence": {
+            "tag": "div",
+            "id": "download-modal",
+            "role": "dialog",
+            "className": "usa-modal-wrapper is-hidden",
+            "textSample": "",
+            "hiddenByAttrs": false
+          },
+          "source": "traceSnapshotDom",
+          "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox."
+        }
+      ],
       "resolvedHtml": "<button type=\"button\" data-close-modal=\"\" _ngcontent-ng-c2100333746=\"\" class=\"usa-button primary-button\"> Download </button>",
       "logs": [
         "waiting for getByRole('button', { name: 'Download' })",

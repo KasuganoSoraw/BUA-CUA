@@ -84,9 +84,26 @@ await ctx.withRecovery(
 - 使用 raw evidence 时应优先关注当前步骤相关的 before/after 状态变化、局部 DOM evidence、selector candidates 和截图；不要把全部 evidence 无差别塞入单个步骤。
 - 如果截图文件名或 action 记录中出现 `annotatedViewport` / `*-annotated.png`，该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 BUA-CUA recorder 后处理添加的，用于指示人类操作位置，不是网页自身 UI。不得把该标记当成页面元素或业务控件。
 - 必须优先使用 `trace_evidence.json` 中工程提取的 facts 来理解 codegen action 的 before/action/after 状态、locator 实际目标、页面跳转和 verifier 候选。
+- 使用每个 action 的 `logs` 理解 Playwright 在录制回放时的 action-level 执行状态。`logs` 是 Playwright trace 自带的自然语言执行诊断，例如 locator resolved、element visible/enabled/stable、click/fill/select completed、navigation waited、strict mode violation 等。
+- 如果 `logs` 显示 locator resolved、元素 visible/enabled/stable 且动作完成，说明该录制动作在 trace 中成功执行；生成 Skill 时不要因为后续某个 wrapper/text verifier 不稳定，就错误否定这个 action 本身。
+- `logs` 只能证明 action-level success，即“录制动作被 Playwright 成功复现”；它不能自动替代 business-level verifier。搜索、筛选、下载、提交、数据提取等业务 step 仍应优先验证后置业务状态。
+- 使用 `trace_evidence.json` 中每个 action 的 `state.delta` 和 `verifierCandidates` 设计 verifier：
+  - `controlChecked` 优先生成 `toBeChecked()`，并用业务标签或区域定位控件；
+  - `controlValue` 优先生成 `toHaveValue()`；
+  - `urlQueryParam` 可用于 URL/query 参数断言；
+  - `dialogLikeState` 只能说明 trace 中出现了弹窗/对话框类 DOM 或 class 状态变化，不能直接证明 wrapper 可见；弹窗 verifier 应优先验证内部可见 heading/button，或验证稳定 class/state；
+  - `textAmbiguityWarning` 表示同名文本可能有多个副本或隐藏副本，遇到这类提示时不得直接使用宽泛的 `getByText(...).toBeVisible()`。
+- `controlChecked`、`controlValue`、`urlQueryParam` 通常是强 verifier 候选；`dialogLikeState` 和 `textAmbiguityWarning` 更多是风险提示，需要结合当前业务 step 选择更稳定的验证目标。
+- `verifierCandidates` 是工程事实候选，不是必须照抄的代码。生成 verifier 时应保留其业务语义，避免把候选中的 DOM id/class 变成用户参数。
 - 如果额外提供了 Playwright trace 原始包，可在事实摘要不足时查看细节；trace 不替代运行时 fallback，也不意味着页面变化后无需 recovery。
 - 模型生成的步骤描述、verifier 和 recovery hints 必须能追溯到 action id、snapshot id 或 selected frame；不得编造 trace 中不存在的动作、URL、locator 或页面文本。
 - 按“页面状态转换”切分流程，而不是按每一次底层 click/fill 切分。
+- verifier 应服务于业务语义 step，而不是每个底层 Playwright action。一个业务 step 内可以包含多个 Playwright action，例如“输入搜索词并选择自动补全项”“选择多个筛选项并点击 Apply Filters”“打开下载弹窗并确认下载”。这种情况下应在 step 末尾验证该 step 的业务状态，而不是每次 click/fill 后都机械断言。
+- 如果一个 step 内的多个 action 已由 Playwright `logs` 证明成功执行，且后续 step 会自然暴露失败，可以减少中间 action verifier，把主要 verifier 放在业务状态转换完成后。
+- verifier 强度分三层理解：
+  - strong：业务状态 verifier，例如 checked/value/url/download/result visible；
+  - medium：Playwright action logs 成功，且后续业务 step 能继续推进；
+  - weak：Playwright action logs 成功，但缺少可靠后置状态。遇到 weak verifier 时，应在 `INFERRED_INTENT.md` 标注不确定性，并尽量给 recovery hints。
 - 每个业务语义步骤都应包含：
   - Playwright 主路径；
   - step recovery agent 配置；
@@ -114,6 +131,13 @@ await ctx.withRecovery(
   - 业务对象名；
   - tab 或字段列表；
   - 筛选值。
+- 参数必须是用户能用自然语言表达、能从任务意图中抽取，或能在页面上以稳定业务语义定位的值。不要把 DOM 内部实现细节暴露成参数，例如：
+  - 不要把 `hit-sel-0`、`adv-radio-sex2`、随机 id、CSS class、XPath、深层 selector 当作 `argsSchema` 或 `fixtures/input.example.json` 中的用户参数；
+  - 这些 DOM 细节只能作为 `index.ts` 内部 locator 证据、trace evidence 引用或 recovery hints；
+  - 如果录制中选择了“前三条结果”，对外参数应设计为 `resultCount: 3`，或在业务允许时设计为稳定的 `nctIds` / `resultTitles`；
+  - 如果录制中选择了某个筛选项，对外参数应设计为可读业务值，例如 `sex: "Male"`、`ageGroup: "Child (birth - 17)"`、`status: "Recruiting and not yet"`，脚本内部再把业务值映射到稳定 locator。
+- 可变筛选条件不得写死在 recovery hints 或 Midscene fallback 中。若某个筛选值进入参数，`primary`、`recoveryOptions.goal`、`recoveryOptions.hints`、Midscene fallback 和 verifier 都必须使用该参数表达当前目标，例如 `${args.sex}` / `${args.ageGroup}`，而不是固定写死 `Male` / `Child`。
+- 如果只能通过 trace 中的 DOM id 复现录制动作，但无法建立用户可理解的业务参数映射，应在 `INFERRED_INTENT.md` 的“不确定点和需要人工审查的地方”中明确说明；不要假装该 DOM id 是合理的业务输入。
 - 固定导航菜单、固定按钮文案、稳定产品 UI 文案默认保持字面量，除非用户任务明确说明这些值可变。
 - 生成的 Skill 不得硬编码模型供应商密钥。
 - 生成的 Skill 在第一次连接真实系统执行前必须经过人工审查。
@@ -212,4 +236,5 @@ await ctx.withRecovery(
 
 - 必须匹配 `skill.json` 中的 `argsSchema`。
 - 只包含运行该 Task Skill 所需的业务参数。
+- 不得包含 DOM 内部实现细节、录制临时 handle 或 selector 片段，例如 `hit-sel-0`、`adv-radio-sex2`、`#some-id`、`.some-class`、XPath。若脚本内部需要这些值，应在 `index.ts` 中由业务参数映射得到，或作为固定 locator 证据写在脚本内部。
 - 示例值应优先来自 codegen 和 trace 中出现的真实录制值；如果是模型推断，应在 `INFERRED_INTENT.md` 的不确定点中说明。

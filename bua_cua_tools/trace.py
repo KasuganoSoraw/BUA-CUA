@@ -12,6 +12,7 @@ import time
 import zipfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -217,6 +218,286 @@ def frame_snapshot_text(snapshot: dict[str, Any] | None) -> list[str]:
     return values[:40]
 
 
+def node_attrs(node: Any) -> dict[str, Any]:
+    if isinstance(node, list) and len(node) > 1 and isinstance(node[1], dict):
+        return node[1]
+    return {}
+
+
+def node_children(node: Any) -> list[Any]:
+    if not isinstance(node, list) or not node:
+        return []
+    start = 2 if len(node) > 1 and isinstance(node[1], dict) else 1
+    return node[start:]
+
+
+def node_text(node: Any, limit: int = 400) -> str:
+    values: list[str] = []
+    html_text_from_trace_node(node, values, limit=20)
+    return re.sub(r"\s+", " ", " ".join(values)).strip()[:limit]
+
+
+def iter_snapshot_elements(node: Any, ancestors: list[dict[str, Any]] | None = None):
+    if ancestors is None:
+        ancestors = []
+    if not isinstance(node, list) or not node or not isinstance(node[0], str):
+        return
+    tag = node[0].upper()
+    attrs = node_attrs(node)
+    current = {
+        "tag": tag,
+        "attrs": attrs,
+        "text": node_text(node),
+        "ancestors": ancestors,
+    }
+    yield current
+    next_ancestors = ancestors + [current]
+    for child in node_children(node):
+        yield from iter_snapshot_elements(child, next_ancestors)
+
+
+def attr_text(attrs: dict[str, Any], name: str) -> str | None:
+    value = attrs.get(name)
+    if value is None:
+        return None
+    return str(value)
+
+
+def is_hidden_by_attrs(element: dict[str, Any]) -> bool:
+    attrs = element["attrs"]
+    if str(attrs.get("hidden", "")).lower() in {"", "true", "hidden"} and "hidden" in attrs:
+        return True
+    if str(attrs.get("aria-hidden", "")).lower() == "true":
+        return True
+    style = str(attrs.get("style", "")).lower()
+    if "display:none" in style.replace(" ", "") or "visibility:hidden" in style.replace(" ", ""):
+        return True
+    return any(is_hidden_by_attrs(ancestor) for ancestor in element.get("ancestors", []))
+
+
+def control_key(control: dict[str, Any]) -> str:
+    if control.get("id"):
+        return f"id:{control['id']}"
+    if control.get("name") and control.get("type"):
+        return f"name-type:{control['name']}:{control['type']}:{control.get('value', '')}"
+    if control.get("labelText"):
+        return f"label:{control.get('tag')}:{control.get('labelText')}"
+    return json.dumps(control, sort_keys=True, ensure_ascii=False)
+
+
+def collect_snapshot_facts(snapshot: dict[str, Any] | None) -> dict[str, Any]:
+    if not snapshot:
+        return {"controls": [], "dialogLike": [], "textOccurrences": {}}
+
+    elements = list(iter_snapshot_elements(snapshot.get("html")))
+    labels_by_for: dict[str, list[dict[str, Any]]] = {}
+    text_occurrences: dict[str, dict[str, Any]] = {}
+    for element in elements:
+        text = element["text"]
+        if 2 <= len(text) <= 120:
+            entry = text_occurrences.setdefault(text, {"count": 0, "hiddenCount": 0})
+            entry["count"] += 1
+            if is_hidden_by_attrs(element):
+                entry["hiddenCount"] += 1
+        if element["tag"] == "LABEL":
+            html_for = attr_text(element["attrs"], "for")
+            if html_for:
+                labels_by_for.setdefault(html_for, []).append(element)
+
+    controls: list[dict[str, Any]] = []
+    dialog_like: list[dict[str, Any]] = []
+    for element in elements:
+        attrs = element["attrs"]
+        tag = element["tag"]
+        element_id = attr_text(attrs, "id")
+        role = attr_text(attrs, "role")
+        class_name = attr_text(attrs, "class")
+        lower_identity = " ".join(value for value in [element_id, role, class_name, tag] if value).lower()
+
+        if tag in {"INPUT", "SELECT", "TEXTAREA", "BUTTON"}:
+            labels = labels_by_for.get(element_id or "", [])
+            checked_value = attrs.get("__playwright_checked_")
+            controls.append(
+                {
+                    "tag": tag.lower(),
+                    "id": element_id,
+                    "type": attr_text(attrs, "type"),
+                    "name": attr_text(attrs, "name"),
+                    "role": role,
+                    "ariaLabel": attr_text(attrs, "aria-label"),
+                    "labelText": labels[0]["text"] if labels else None,
+                    "value": attr_text(attrs, "__playwright_value_") or attr_text(attrs, "value"),
+                    "checked": str(checked_value).lower() == "true" if checked_value is not None else None,
+                    "className": class_name,
+                    "hiddenByAttrs": is_hidden_by_attrs(element),
+                }
+            )
+
+        if tag == "DIALOG" or role == "dialog" or any(token in lower_identity for token in ["modal", "dialog", "popup"]):
+            dialog_like.append(
+                {
+                    "tag": tag.lower(),
+                    "id": element_id,
+                    "role": role,
+                    "className": class_name,
+                    "textSample": element["text"][:160],
+                    "hiddenByAttrs": is_hidden_by_attrs(element),
+                }
+            )
+
+    duplicate_texts = [
+        {"text": text, **counts}
+        for text, counts in text_occurrences.items()
+        if counts["count"] > 1
+    ][:40]
+
+    return {
+        "controls": controls[:120],
+        "dialogLike": dialog_like[:40],
+        "duplicateTexts": duplicate_texts,
+    }
+
+
+def query_params(url: str | None) -> dict[str, list[str]]:
+    if not url:
+        return {}
+    return parse_qs(urlparse(url).query, keep_blank_values=True)
+
+
+def query_delta(before_url: str | None, after_url: str | None) -> dict[str, Any]:
+    before = query_params(before_url)
+    after = query_params(after_url)
+    keys = sorted(set(before) | set(after))
+    changed = [
+        {"name": key, "before": before.get(key), "after": after.get(key)}
+        for key in keys
+        if before.get(key) != after.get(key)
+    ]
+    return {
+        "changed": changed,
+        "added": [item for item in changed if item["before"] is None],
+        "removed": [item for item in changed if item["after"] is None],
+    }
+
+
+def diff_snapshot_facts(
+    before_snapshot: dict[str, Any] | None,
+    after_snapshot: dict[str, Any] | None,
+    before_url: str | None,
+    after_url: str | None,
+) -> dict[str, Any]:
+    before_facts = collect_snapshot_facts(before_snapshot)
+    after_facts = collect_snapshot_facts(after_snapshot)
+    before_controls = {control_key(control): control for control in before_facts["controls"]}
+    after_controls = {control_key(control): control for control in after_facts["controls"]}
+
+    checked_changes = []
+    value_changes = []
+    for key in sorted(set(before_controls) | set(after_controls)):
+        before = before_controls.get(key)
+        after = after_controls.get(key)
+        if not before or not after:
+            continue
+        if before.get("checked") != after.get("checked") and after.get("checked") is not None:
+            checked_changes.append({"key": key, "before": before, "after": after})
+        if before.get("value") != after.get("value") and after.get("value") is not None:
+            value_changes.append({"key": key, "before": before, "after": after})
+
+    before_dialogs = {
+        json.dumps(
+            {k: dialog.get(k) for k in ["id", "role", "className", "textSample"]},
+            sort_keys=True,
+            ensure_ascii=False,
+        ): dialog
+        for dialog in before_facts["dialogLike"]
+    }
+    after_dialogs = {
+        json.dumps(
+            {k: dialog.get(k) for k in ["id", "role", "className", "textSample"]},
+            sort_keys=True,
+            ensure_ascii=False,
+        ): dialog
+        for dialog in after_facts["dialogLike"]
+    }
+    dialog_added = [
+        dialog for key, dialog in after_dialogs.items() if key not in before_dialogs
+    ][:10]
+
+    before_text = set(frame_snapshot_text(before_snapshot))
+    after_text = set(frame_snapshot_text(after_snapshot))
+    return {
+        "queryParams": query_delta(before_url, after_url),
+        "checkedChanges": checked_changes[:20],
+        "valueChanges": value_changes[:20],
+        "dialogLikeAdded": dialog_added,
+        "textAddedSample": sorted(after_text - before_text)[:20],
+        "textRemovedSample": sorted(before_text - after_text)[:20],
+        "duplicateTextsAfter": after_facts["duplicateTexts"][:20],
+    }
+
+
+def verifier_candidates_from_delta(delta: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for change in delta.get("checkedChanges", []):
+        after = change["after"]
+        if after.get("checked") is True:
+            candidates.append(
+                {
+                    "kind": "controlChecked",
+                    "target": after.get("labelText") or after.get("ariaLabel") or after.get("id"),
+                    "recommendedVerifier": "toBeChecked",
+                    "evidence": after,
+                    "source": "traceSnapshotDom",
+                    "notes": "Use the business label as external parameter; keep ids/classes as internal locator evidence only.",
+                }
+            )
+    for change in delta.get("valueChanges", []):
+        after = change["after"]
+        if after.get("value"):
+            candidates.append(
+                {
+                    "kind": "controlValue",
+                    "target": after.get("labelText") or after.get("ariaLabel") or after.get("id"),
+                    "recommendedVerifier": "toHaveValue",
+                    "evidence": after,
+                    "source": "traceSnapshotDom",
+                }
+            )
+    for item in delta.get("queryParams", {}).get("changed", [])[:10]:
+        candidates.append(
+            {
+                "kind": "urlQueryParam",
+                "target": item["name"],
+                "recommendedVerifier": "toHaveURL/query param assertion",
+                "evidence": item,
+                "source": "traceSnapshotUrl",
+            }
+        )
+    for dialog in delta.get("dialogLikeAdded", [])[:5]:
+        candidates.append(
+            {
+                "kind": "dialogLikeState",
+                "target": dialog.get("id") or dialog.get("role") or dialog.get("className"),
+                "recommendedVerifier": "prefer visible inner heading/button or stable class/state; do not assume wrapper toBeVisible",
+                "evidence": dialog,
+                "source": "traceSnapshotDom",
+                "notes": "Trace snapshot can show dialog-like DOM/class changes, but not reliable computed visibility or bbox.",
+            }
+        )
+    duplicate_texts = delta.get("duplicateTextsAfter", [])
+    if duplicate_texts:
+        candidates.append(
+            {
+                "kind": "textAmbiguityWarning",
+                "target": "duplicate visible/hidden text risk",
+                "recommendedVerifier": "avoid broad getByText(...).toBeVisible(); scope to business region or verify control/url state",
+                "evidence": duplicate_texts[:8],
+                "source": "traceSnapshotDom",
+            }
+        )
+    return candidates[:20]
+
+
 def nearest_frame(
     frames: list[dict[str, Any]],
     page_id: str | None,
@@ -355,6 +636,7 @@ def command_summarize_trace(args: argparse.Namespace) -> int:
             after_url = after_snapshot.get("frameUrl") if after_snapshot else None
             before_text = frame_snapshot_text(before_snapshot)
             after_text = frame_snapshot_text(after_snapshot)
+            state_delta = diff_snapshot_facts(before_snapshot, after_snapshot, before_url, after_url)
             action = {
                 "id": action_id,
                 "codegenActionIndex": index,
@@ -380,7 +662,9 @@ def command_summarize_trace(args: argparse.Namespace) -> int:
                     "urlChanged": bool(before_url and after_url and before_url != after_url),
                     "beforeTextSample": before_text[:12],
                     "afterTextSample": after_text[:12],
+                    "delta": state_delta,
                 },
+                "verifierCandidates": verifier_candidates_from_delta(state_delta),
                 "resolvedHtml": extract_resolved_html(call.get("logs", [])),
                 "logs": call.get("logs", [])[:12],
                 "error": call.get("error"),
