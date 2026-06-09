@@ -1,0 +1,60 @@
+{
+  "name": "clinic-demo",
+  "type": "task",
+  "version": "0.1.0",
+  "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
+  "risk": "read_only",
+  "description": "在 ClinicalTrials.gov 上按疾病/状态/性别/年龄筛选临床试验结果，选择指定数量的结果卡片并下载默认导出文件。",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "condition",
+      "status",
+      "sex",
+      "ageGroup",
+      "resultCount"
+    ],
+    "properties": {
+      "condition": {
+        "type": "string",
+        "description": "Condition/disease 搜索框中选择的疾病或条件名称。录制示例中选择 Diabetes。",
+        "minLength": 1,
+        "default": "Diabetes"
+      },
+      "status": {
+        "type": "string",
+        "description": "初始高级搜索中选择的研究状态。当前证据只覆盖 Recruiting and not yet。",
+        "enum": [
+          "Recruiting and not yet"
+        ],
+        "default": "Recruiting and not yet"
+      },
+      "sex": {
+        "type": "string",
+        "description": "结果页筛选面板中的性别筛选值。当前证据只覆盖 Male。",
+        "enum": [
+          "Male"
+        ],
+        "default": "Male"
+      },
+      "ageGroup": {
+        "type": "string",
+        "description": "结果页筛选面板中的年龄组筛选值。当前证据只覆盖 Child (birth - 17)。",
+        "enum": [
+          "Child (birth - 17)"
+        ],
+        "default": "Child (birth - 17)"
+      },
+      "resultCount": {
+        "type": "integer",
+        "description": "在搜索结果卡片中勾选并下载的结果数量。录制示例为 3。",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 3
+      }
+    }
+  }
+}

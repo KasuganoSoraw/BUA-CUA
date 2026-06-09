@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from bua_cua_tools.generate import command_generate_skill, command_model_preflight
+from bua_cua_tools.providers import apply_provider_environment, selected_provider
 from bua_cua_tools.trace import command_summarize_trace, command_trace_codegen
 
 
@@ -201,6 +202,11 @@ def command_validate_skill(args: argparse.Namespace) -> int:
 
 
 def command_run_skill(args: argparse.Namespace) -> int:
+    try:
+        provider = selected_provider(args)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
     path = skill_dir(args.skill)
     errors = validate_skill(path)
     if errors:
@@ -223,9 +229,31 @@ def command_run_skill(args: argparse.Namespace) -> int:
         node_args.append("--headless")
     if args.skip_pre_skills:
         node_args.append("--skip-pre-skills")
+    if provider:
+        node_args.append(f"--{provider}")
 
     completed = subprocess.run(node_args, cwd=ROOT)
     return completed.returncode
+
+
+def command_generate_skill_with_provider(args: argparse.Namespace) -> int:
+    try:
+        provider = selected_provider(args)
+        apply_provider_environment(provider, ROOT / ".env")
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    return command_generate_skill(args)
+
+
+def command_model_preflight_with_provider(args: argparse.Namespace) -> int:
+    try:
+        provider = selected_provider(args)
+        apply_provider_environment(provider, ROOT / ".env")
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    return command_model_preflight(args)
 
 
 def command_record(args: argparse.Namespace) -> int:
@@ -299,6 +327,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--args", required=True, help="path to skill args JSON")
     run.add_argument("--headless", action="store_true", help="run browser headless")
     run.add_argument("--skip-pre-skills", action="store_true")
+    run.add_argument("--qwen", action="store_true", help="use qwen provider config from .env")
+    run.add_argument("--minimax", action="store_true", help="use minimax provider config from .env")
     run.set_defaults(func=command_run_skill)
 
     record = subparsers.add_parser("record", help="record raw browser evidence for an input pack")
@@ -322,11 +352,15 @@ def build_parser() -> argparse.ArgumentParser:
     generate = subparsers.add_parser("generate-skill", help="generate a Task Skill from intent, codegen, and trace evidence")
     generate.add_argument("task")
     generate.add_argument("--overwrite", action="store_true", help="overwrite an existing non-empty skills/<task> directory")
-    generate.set_defaults(func=command_generate_skill)
+    generate.add_argument("--qwen", action="store_true", help="use qwen provider config from .env")
+    generate.add_argument("--minimax", action="store_true", help="use minimax provider config from .env")
+    generate.set_defaults(func=command_generate_skill_with_provider)
 
     preflight = subparsers.add_parser("model-preflight", help="check OpenAI-compatible model connectivity")
     preflight.add_argument("--timeout", type=int, default=180, help="request timeout in seconds")
-    preflight.set_defaults(func=command_model_preflight)
+    preflight.add_argument("--qwen", action="store_true", help="use qwen provider config from .env")
+    preflight.add_argument("--minimax", action="store_true", help="use minimax provider config from .env")
+    preflight.set_defaults(func=command_model_preflight_with_provider)
 
     return parser
 

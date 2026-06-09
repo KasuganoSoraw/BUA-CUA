@@ -52,12 +52,14 @@ Step Recovery Agent 使用 OpenAI-compatible Chat Completions 协议。百炼/Qw
 ```powershell
 $env:MIDSCENE_MODEL_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
 $env:MIDSCENE_MODEL_API_KEY="<your-key>"
-$env:MIDSCENE_MODEL_NAME="qwen3.6-plus-2026-04-02"
-$env:MIDSCENE_MODEL_FAMILY="qwen3.6"
+$env:MIDSCENE_MODEL_NAME="qwen3.7-plus"
+$env:MIDSCENE_MODEL_FAMILY="qwen"
 $env:BUA_CUA_RECOVERY_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
 $env:BUA_CUA_RECOVERY_API_KEY="<your-key>"
-$env:BUA_CUA_RECOVERY_MODEL="qwen3.6-plus-2026-04-02"
+$env:BUA_CUA_RECOVERY_MODEL="qwen3.7-plus"
 $env:BUA_CUA_RECOVERY_VISION="true"
+$env:BUA_CUA_MIDSCENE_FALLBACK_TIMEOUT_MS="120000"
+$env:BUA_CUA_GENERATION_TIMEOUT="1800"
 ```
 
 手动文本预检：
@@ -235,7 +237,7 @@ inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
 inputs/<task>/trace/trace_evidence.json # 必须，工程事实层
 ```
 
-可以使用 Qwen/OpenAI-compatible 模型自动生成：
+可以使用 `.env` 中配置的 OpenAI-compatible 模型自动生成：
 
 ```powershell
 uv run bua-cua generate-skill <task>
@@ -311,7 +313,32 @@ uv run bua-cua run-skill clinical_trials_download_recovery --args .\skills\clini
 
 `ctx.recoverStep` 与 `ctx.withRecovery` 的区别：
 
-- `ctx.withRecovery`：有 Playwright primary，失败后才启动 step recovery agent。
+- `ctx.withRecovery`：有 Playwright primary。primary 抛错或 verifier 失败时都会启动 step recovery agent；recovery 后重新执行 verifier，仍失败再进入 Midscene fallback。
 - `ctx.recoverStep`：没有 Playwright primary，当前 step 直接由 step recovery agent 执行，适合无 codegen 的 recovery-driven Task Skill。
 
-由 Playwright codegen 派生的普通 Task Skill，网页操作步骤也应默认使用 `ctx.withRecovery`，链路为 `Playwright primary -> step recovery agent/CDP -> Midscene fallback -> verifier`。`ctx.withFallback` 只适合纯本地处理、纯断言或明确不允许 recovery 的高风险步骤。
+由 Playwright codegen 派生的普通 Task Skill，网页操作步骤也应默认使用 `ctx.withRecovery`，链路为 `Playwright primary -> verifier -> step recovery agent/CDP -> verifier -> Midscene fallback -> verifier`。`ctx.withFallback` 只适合纯本地处理、纯断言或明确不允许 recovery 的高风险步骤。
+
+### 模型 provider 切换
+
+`--qwen` 和 `--minimax` 会从 `.env` 中读取对应 provider 配置，用于模型预检、Task Skill 生成和运行时 recovery。Task Skill 脚本本身不应硬编码 provider 或 API key。
+
+```powershell
+uv run bua-cua model-preflight --qwen
+uv run bua-cua model-preflight --minimax
+uv run bua-cua generate-skill <task> --qwen --overwrite
+uv run bua-cua generate-skill <task> --minimax --overwrite
+uv run bua-cua run-skill <task> --args .\skills\<task>\fixtures\input.example.json --qwen
+uv run bua-cua run-skill <task> --args .\skills\<task>\fixtures\input.example.json --minimax
+```
+
+MiniMax 使用火山方舟 OpenAI-compatible endpoint，`.env` 示例：
+
+```text
+BUA_CUA_MINIMAX_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3
+BUA_CUA_MINIMAX_API_KEY=<your-key>
+BUA_CUA_MINIMAX_MODEL=minimax-m3
+```
+
+使用 `--minimax` 时，Toolkit 会在 Chat Completions 请求中自动发送 `thinking: { "type": "disabled" }`，避免 MiniMax-M3 默认进入思考模式并消耗额外 token。
+
+真实 API key 只放本地 `.env`，不要提交。

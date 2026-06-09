@@ -1,0 +1,53 @@
+{
+  "name": "clinic-demo",
+  "type": "task",
+  "version": "1.0.0",
+  "description": "在 ClinicalTrials.gov 搜索指定疾病，应用研究状态、性别和年龄筛选，选择前若干条搜索结果并下载选中记录。",
+  "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "condition": {
+        "type": "string",
+        "minLength": 1,
+        "default": "Diabetes"
+      },
+      "conditionSearchTerm": {
+        "type": "string",
+        "minLength": 1,
+        "default": "dia"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["Recruiting and not yet"],
+        "default": "Recruiting and not yet"
+      },
+      "sex": {
+        "type": "string",
+        "enum": ["Male", "Female", "All"],
+        "default": "Male"
+      },
+      "ageGroup": {
+        "type": "string",
+        "enum": ["Child (birth - 17)"],
+        "default": "Child (birth - 17)"
+      },
+      "resultCount": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 3
+      },
+      "downloadDir": {
+        "type": "string",
+        "minLength": 1,
+        "default": "downloads"
+      }
+    },
+    "required": ["condition"]
+  }
+}

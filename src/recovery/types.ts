@@ -22,6 +22,8 @@ export type RecoveryRequest = {
   skillName: string;
   stepName: string;
   failure: unknown;
+  failureKind?: 'primary_failed' | 'verify_failed' | 'recovery_verify_failed';
+  primaryStatus?: 'passed' | 'failed' | 'not_run';
   options: RecoveryOptions;
   harness: RecoveryHarness;
   log(type: string, message?: string, data?: Record<string, unknown>, level?: 'info' | 'warn' | 'error'): void;

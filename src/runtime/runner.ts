@@ -9,18 +9,24 @@ import { runStepRecovery } from '../recovery/agent.js';
 import { createRecoveryHarness } from '../recovery/harness.js';
 import type { RecoveryOptions } from '../recovery/types.js';
 import { JsonlLogger } from './logger.js';
+import { applyProviderEnvironment, type ProviderName } from './providers.js';
 import type { SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
 
 dotenv.config();
 
 const ROOT_DIR = process.cwd();
 const AUTH_STATE_PATH = path.join(ROOT_DIR, 'auth', 'storage-state.json');
+const MIDSCENE_FALLBACK_TIMEOUT_MS = Number.parseInt(
+  process.env.BUA_CUA_MIDSCENE_FALLBACK_TIMEOUT_MS ?? '120000',
+  10,
+);
 
 type RunnerOptions = {
   skill: string;
   argsPath: string;
   headless: boolean;
   skipPreSkills: boolean;
+  provider?: ProviderName;
 };
 
 function parseOptions(argv: string[]): RunnerOptions {
@@ -41,6 +47,16 @@ function parseOptions(argv: string[]): RunnerOptions {
       options.headless = true;
     } else if (arg === '--skip-pre-skills') {
       options.skipPreSkills = true;
+    } else if (arg === '--qwen') {
+      if (options.provider) {
+        throw new Error('Use only one provider flag: --qwen or --minimax');
+      }
+      options.provider = 'qwen';
+    } else if (arg === '--minimax') {
+      if (options.provider) {
+        throw new Error('Use only one provider flag: --qwen or --minimax');
+      }
+      options.provider = 'minimax';
     } else if (arg === '--headed') {
       options.headless = false;
     } else {
@@ -90,6 +106,31 @@ function validateArgs(manifest: SkillManifest, args: SkillArgs): void {
   if (!validate(args)) {
     const details = ajv.errorsText(validate.errors, { separator: '\n' });
     throw new Error(`Invalid args for ${manifest.name}:\n${details}`);
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function withTimeout<T>(label: string, promise: Promise<T>, timeoutMs: number): Promise<T> {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return promise;
+  }
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
   }
 }
 
@@ -178,22 +219,63 @@ function makeContext(params: {
     ): Promise<T> {
       return this.step(name, async () => {
         let result: T | undefined;
-        let primaryError: unknown;
+        let triggerError: unknown;
+        let failureKind: 'primary_failed' | 'verify_failed' | 'recovery_verify_failed' = 'primary_failed';
+        let primaryStatus: 'passed' | 'failed' = 'failed';
+
+        async function runVerify(
+          failureEvent: 'verify_failed' | 'recovery_verify_failed' | undefined,
+        ): Promise<{ ok: true } | { ok: false; error: unknown }> {
+          if (!verify) {
+            return { ok: true };
+          }
+          logger.info(manifest.name, 'verify_start', undefined, undefined, name);
+          try {
+            await verify();
+            logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+            return { ok: true };
+          } catch (error) {
+            if (failureEvent) {
+              logger.warn(
+                manifest.name,
+                failureEvent,
+                error instanceof Error ? error.message : String(error),
+                undefined,
+                name,
+              );
+            }
+            return { ok: false, error };
+          }
+        }
 
         try {
           logger.info(manifest.name, 'primary_start', undefined, undefined, name);
           result = await primary();
+          primaryStatus = 'passed';
           logger.info(manifest.name, 'primary_end', undefined, undefined, name);
         } catch (error) {
-          primaryError = error;
+          triggerError = error;
+          failureKind = 'primary_failed';
+          primaryStatus = 'failed';
           logger.warn(manifest.name, 'primary_failed', error instanceof Error ? error.message : String(error), undefined, name);
         }
 
-        if (primaryError) {
+        if (!triggerError) {
+          const initialVerify = await runVerify('verify_failed');
+          if (initialVerify.ok) {
+            return result as T;
+          }
+          triggerError = initialVerify.error;
+          failureKind = 'verify_failed';
+        }
+
+        if (triggerError) {
           const recoveryResult = await runStepRecovery({
             skillName: manifest.name,
             stepName: name,
-            failure: primaryError,
+            failure: triggerError,
+            failureKind,
+            primaryStatus,
             options: recoveryOptions,
             harness,
             log(type, message, data, level) {
@@ -201,33 +283,41 @@ function makeContext(params: {
             },
           });
 
-          if (!recoveryResult.ok) {
-            if (!recoveryResult.skipped && verify) {
-              try {
-                logger.info(manifest.name, 'recovery_verify_start', undefined, undefined, name);
-                await verify();
-                logger.info(manifest.name, 'recovery_success_by_verifier', recoveryResult.reason, undefined, name);
-                return undefined as T;
-              } catch (verifyError) {
-                logger.warn(
-                  manifest.name,
-                  'recovery_verify_failed',
-                  verifyError instanceof Error ? verifyError.message : String(verifyError),
-                  undefined,
-                  name,
-                );
-              }
+          if (recoveryResult.ok) {
+            const recoveryVerify = await runVerify('recovery_verify_failed');
+            if (recoveryVerify.ok) {
+              return (primaryStatus === 'passed' ? result : undefined) as T;
             }
-            logger.warn(manifest.name, 'midscene_fallback_start', recoveryResult.reason, undefined, name);
-            result = await midsceneFallback(primaryError);
-            logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+            triggerError = recoveryVerify.error;
+            failureKind = 'recovery_verify_failed';
           }
-        }
 
-        if (verify) {
-          logger.info(manifest.name, 'verify_start', undefined, undefined, name);
-          await verify();
-          logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+          const fallbackReason = recoveryResult.ok
+            ? errorMessage(triggerError)
+            : recoveryResult.reason;
+          logger.warn(manifest.name, 'midscene_fallback_start', fallbackReason, undefined, name);
+          try {
+            result = await withTimeout(
+              `Midscene fallback for step "${name}"`,
+              midsceneFallback(triggerError),
+              MIDSCENE_FALLBACK_TIMEOUT_MS,
+            );
+            logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+          } catch (error) {
+            logger.warn(
+              manifest.name,
+              'midscene_fallback_failed',
+              error instanceof Error ? error.message : String(error),
+              { timeoutMs: MIDSCENE_FALLBACK_TIMEOUT_MS },
+              name,
+            );
+            throw error;
+          }
+          if (verify) {
+            logger.info(manifest.name, 'verify_start', undefined, undefined, name);
+            await verify();
+            logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+          }
         }
 
         return result as T;
@@ -272,8 +362,23 @@ function makeContext(params: {
           if (!midsceneFallback) {
             throw new Error(`Recovery step failed: ${recoveryResult.reason ?? 'unknown'}`);
           }
-          await midsceneFallback(new Error(recoveryResult.reason ?? 'recovery_failed'));
-          logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+          try {
+            await withTimeout(
+              `Midscene fallback for step "${name}"`,
+              midsceneFallback(new Error(recoveryResult.reason ?? 'recovery_failed')),
+              MIDSCENE_FALLBACK_TIMEOUT_MS,
+            );
+            logger.info(manifest.name, 'midscene_fallback_end', undefined, undefined, name);
+          } catch (error) {
+            logger.warn(
+              manifest.name,
+              'midscene_fallback_failed',
+              error instanceof Error ? error.message : String(error),
+              { timeoutMs: MIDSCENE_FALLBACK_TIMEOUT_MS },
+              name,
+            );
+            throw error;
+          }
         }
 
         if (verify) {
@@ -312,6 +417,7 @@ async function runSkill(params: {
 
 async function main(): Promise<void> {
   const options = parseOptions(process.argv.slice(2));
+  applyProviderEnvironment(options.provider);
   const skillDir = resolveSkillDir(options.skill);
   const manifest = loadManifest(skillDir);
   const inferredIntent = loadInferredIntent(skillDir, manifest);
@@ -322,6 +428,7 @@ async function main(): Promise<void> {
   logger.info(manifest.name, 'run_start', undefined, {
     skillDir,
     headless: options.headless,
+    provider: options.provider ?? 'env',
     inferredIntent: manifest.inferredIntent,
   });
   if (inferredIntent) {

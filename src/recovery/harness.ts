@@ -47,7 +47,7 @@ const FORBIDDEN_PROBE_PATTERNS = [
   /\.(appendChild|removeChild|replaceChild|insertBefore)\s*\(/i,
   /\b(setAttribute|removeAttribute)\s*\(/i,
   /\bdispatchEvent\s*\(/i,
-  /\b(value|checked|selected)\s*(?<![=!<>])=(?!=)/i,
+  /\.(value|checked|selected)\s*(?<![=!<>])=(?!=)/i,
   /\binnerHTML\s*=/i,
   /\bouterHTML\s*=/i,
   /\btextContent\s*=/i,
@@ -99,7 +99,17 @@ export async function createRecoveryHarness(params: {
       if (trimmed.startsWith('(') || trimmed.startsWith('async ')) {
         return (0, eval)(source);
       }
-      return Function(source)();
+      const explicitResult = Function(source)();
+      if (explicitResult !== undefined) {
+        return explicitResult;
+      }
+
+      const statements = trimmed.split(';').map((statement) => statement.trim()).filter(Boolean);
+      const lastStatement = statements.at(-1);
+      if (!lastStatement || /\b(return|if|for|while|switch|throw|const|let|var|function|class)\b/.test(lastStatement)) {
+        return explicitResult;
+      }
+      return Function(`${source}\nreturn (${lastStatement});`)();
     }, code) as Promise<T>;
   }
 

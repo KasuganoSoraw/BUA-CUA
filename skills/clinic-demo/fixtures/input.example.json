@@ -1,6 +1,0 @@
-{
-  "condition": "Diabetes",
-  "conditionSearchTerm": "dia",
-  "selectedResultIds": ["hit-sel-0", "hit-sel-1", "hit-sel-2"],
-  "downloadDir": "downloads"
-}

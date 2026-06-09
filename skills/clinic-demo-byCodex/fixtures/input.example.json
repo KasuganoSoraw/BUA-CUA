@@ -1,0 +1,9 @@
+{
+  "condition": "Diabetes",
+  "conditionSearchTerm": "dia",
+  "status": "Recruiting and not yet",
+  "sex": "Male",
+  "ageGroup": "Child (birth - 17)",
+  "resultCount": 3,
+  "downloadDir": "downloads"
+}

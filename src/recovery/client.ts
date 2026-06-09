@@ -35,12 +35,13 @@ export type RecoveryModelConfig = {
   model: string;
   vision: boolean;
   maxTurns: number;
+  disableThinking: boolean;
 };
 
 export function loadRecoveryModelConfig(): RecoveryModelConfig {
   const baseUrl = process.env.BUA_CUA_RECOVERY_BASE_URL ?? '';
   const apiKey = process.env.BUA_CUA_RECOVERY_API_KEY ?? '';
-  const model = process.env.BUA_CUA_RECOVERY_MODEL ?? 'qwen3.6-plus-2026-04-02';
+  const model = process.env.BUA_CUA_RECOVERY_MODEL ?? 'qwen3.7-plus';
   const maxTurns = Number.parseInt(process.env.BUA_CUA_RECOVERY_MAX_TURNS ?? '6', 10);
 
   return {
@@ -50,6 +51,7 @@ export function loadRecoveryModelConfig(): RecoveryModelConfig {
     model,
     vision: (process.env.BUA_CUA_RECOVERY_VISION ?? 'true').toLowerCase() !== 'false',
     maxTurns: Number.isFinite(maxTurns) && maxTurns > 0 ? maxTurns : 6,
+    disableThinking: process.env.BUA_CUA_ACTIVE_PROVIDER === 'minimax',
   };
 }
 
@@ -92,6 +94,7 @@ export class RecoveryChatClient {
         messages: params.messages,
         tools: params.tools,
         tool_choice: 'auto',
+        ...(this.config.disableThinking ? { thinking: { type: 'disabled' } } : {}),
       }),
     });
 

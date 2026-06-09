@@ -1,0 +1,36 @@
+{
+  "name": "clinic-demo",
+  "type": "task",
+  "version": "1.0.0",
+  "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
+  "risk": "read_only",
+  "description": "在 ClinicalTrials.gov 搜索特定条件的临床试验，应用多维筛选，选择指定数量的试验并下载详细信息。",
+  "argsSchema": {
+    "type": "object",
+    "properties": {
+      "condition": {
+        "type": "string",
+        "description": "疾病或条件名称，例如 Diabetes"
+      },
+      "status": {
+        "type": "string",
+        "description": "招募状态，例如 Recruiting and not yet"
+      },
+      "sex": {
+        "type": "string",
+        "description": "性别，例如 Male"
+      },
+      "ageGroup": {
+        "type": "string",
+        "description": "年龄组，例如 Child (birth - 17)"
+      },
+      "resultCount": {
+        "type": "integer",
+        "description": "需要选择并下载的临床试验数量",
+        "minimum": 1
+      }
+    },
+    "required": ["condition", "status", "sex", "ageGroup", "resultCount"]
+  }
+}

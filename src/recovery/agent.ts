@@ -147,6 +147,16 @@ function textFromMessage(content: ChatMessage['content']): string {
   return JSON.stringify(content ?? '');
 }
 
+function recoveryInstruction(request: RecoveryRequest): string {
+  if (request.failureKind === 'verify_failed') {
+    return '只恢复当前 step。primary 已执行成功，但 verifier 失败。请基于当前页面状态判断还缺什么并完成当前 step，不要默认从头重放整个 step。需要工具时调用一个工具。完成当前 step 后回复 done。无法完成时回复 failed。';
+  }
+  if (request.failureKind === 'recovery_verify_failed') {
+    return '只恢复当前 step。此前 recovery 后 verifier 仍失败。请基于当前页面状态继续补救当前 step，不要重新规划整个任务。需要工具时调用一个工具。完成当前 step 后回复 done。无法完成时回复 failed。';
+  }
+  return '只恢复当前 step。需要工具时调用一个工具。完成当前 step 后回复 done。无法完成时回复 failed。';
+}
+
 async function runTool(request: RecoveryRequest, call: ToolCall): Promise<unknown> {
   const args = parseJsonObject(call.function.arguments);
   request.log('recovery_tool_start', call.function.name, { args });
@@ -194,10 +204,12 @@ export async function runStepRecovery(request: RecoveryRequest): Promise<Recover
         stepName: request.stepName,
         goal: request.options.goal,
         failure: request.failure instanceof Error ? request.failure.message : String(request.failure),
+        failureKind: request.failureKind ?? 'primary_failed',
+        primaryStatus: request.primaryStatus ?? 'unknown',
         hints: request.options.hints ?? [],
         allowedTools,
         risk: request.options.risk ?? 'unknown',
-        instruction: '只恢复当前 step。需要工具时调用一个工具。完成当前 step 后回复 done。无法完成时回复 failed。',
+        instruction: recoveryInstruction(request),
       }),
     },
   ];
