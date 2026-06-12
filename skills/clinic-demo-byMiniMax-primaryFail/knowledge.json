@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "description": "Runtime-learned GUI knowledge for this Task Skill. API fast paths stay in api_registry.json.",
+  "optionMappings": [],
+  "recoveryCases": [],
+  "selectorHints": []
+}

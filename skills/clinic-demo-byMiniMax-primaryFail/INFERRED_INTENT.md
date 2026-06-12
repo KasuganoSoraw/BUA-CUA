@@ -1,6 +1,6 @@
 # LLM 推测任务意图
 
-> 本文件由 LLM 根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 recorder evidence 推测生成。
+> 本文件由 LLM 根据 `intent.md`、`codegen.spec.ts` 和 `trace_evidence.json` 推测生成。
 > 它是执行与 recovery 的参考说明，不是工程事实层，也不代表用户逐字确认过。
 >
 > 本任务中用户未提供真实自然语言意图或人工步骤说明；以下内容是模型根据 codegen 与 `trace_evidence.json` 推断的人类任务意图，不是用户手写原始意图。

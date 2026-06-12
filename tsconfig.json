@@ -10,5 +10,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "skills/**/*.ts", "recorder/**/*.ts"]
+  "include": ["src/**/*.ts", "skills/**/*.ts"]
 }

@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "status": "probed",
+  "description": "API fast path candidates extracted from inputs/clinic-demo/trace/api_candidates.json. These candidates are read/download only and must be probed before being treated as verified.",
+  "source": {
+    "traceEvidence": "inputs/clinic-demo/trace/trace_evidence.json",
+    "apiCandidates": "inputs/clinic-demo/trace/api_candidates.json"
+  },
+  "fallback": "Use the existing GUI path in index.ts if any API request, schema check, parameter mapping, or download verifier fails.",
+  "fastPaths": [
+    {
+      "id": "clinic_search_studies",
+      "status": "probed",
+      "kind": "query",
+      "risk": "read_only",
+      "candidateId": "network-132-query",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/studies",
+      "paramTemplate": {
+        "cond": "{{condition}}",
+        "aggFilters": "{{ageAggFilter}},{{sexAggFilter}},{{statusAggFilter}}",
+        "checkSpell": "true",
+        "from": "0",
+        "limit": "{{limit}}",
+        "fields": "OverallStatus,LastKnownStatus,StatusVerifiedDate,HasResults,BriefTitle,Condition,InterventionType,InterventionName,LocationFacility,LocationCity,LocationState,LocationCountry,LocationStatus,LocationZip,LocationGeoPoint,LocationContactName,LocationContactRole,LocationContactPhone,LocationContactPhoneExt,LocationContactEMail,CentralContactName,CentralContactRole,CentralContactPhone,CentralContactPhoneExt,CentralContactEMail,Gender,MinimumAge,MaximumAge,StdAge,NCTId,StudyType,LeadSponsorName,Acronym,EnrollmentCount,StartDate,PrimaryCompletionDate,CompletionDate,StudyFirstPostDate,ResultsFirstPostDate,LastUpdatePostDate,OrgStudyId,SecondaryId,Phase,LargeDocLabel,LargeDocFilename,PrimaryOutcomeMeasure,SecondaryOutcomeMeasure,DesignAllocation,DesignInterventionModel,DesignMasking,DesignWhoMasked,DesignPrimaryPurpose,DesignObservationalModel,DesignTimePerspective,LeadSponsorClass,CollaboratorClass",
+        "columns": "conditions,interventions,collaborators",
+        "highlight": "true",
+        "sort": "@relevance"
+      },
+      "observed": {
+        "condition": "Diabetes",
+        "aggFilters": "ages:child,sex:m,status:not rec",
+        "total": 380,
+        "sampleHitIds": [
+          "NCT07625254",
+          "NCT07621445",
+          "NCT07019025"
+        ],
+        "aggFilterGroups": [
+          {
+            "id": "status",
+            "type": "MULTIPLE_SELECTION",
+            "options": [
+              {
+                "key": "not",
+                "count": 104,
+                "checked": true
+              },
+              {
+                "key": "rec",
+                "count": 276,
+                "checked": true
+              },
+              {
+                "key": "act",
+                "count": 100,
+                "checked": false
+              },
+              {
+                "key": "com",
+                "count": 1859,
+                "checked": false
+              },
+              {
+                "key": "ter",
+                "count": 104,
+                "checked": false
+              },
+              {
+                "key": "enr",
+                "count": 43,
+                "checked": false
+              },
+              {
+                "key": "sus",
+                "count": 6,
+                "checked": false
+              },
+              {
+                "key": "wit",
+                "count": 68,
+                "checked": false
+              },
+              {
+                "key": "unk",
+                "count": 415,
+                "checked": false
+              },
+              {
+                "key": "ava",
+                "count": 0,
+                "checked": false
+              },
+              {
+                "key": "nla",
+                "count": 4,
+                "checked": false
+              },
+              {
+                "key": "tna",
+                "count": 0,
+                "checked": false
+              },
+              {
+                "key": "afm",
+                "count": 0,
+                "checked": false
+              }
+            ]
+          },
+          {
+            "id": "sex",
+            "type": "SINGLE_SELECTION",
+            "options": [
+              {
+                "key": "all",
+                "count": 399,
+                "checked": false
+              },
+              {
+                "key": "f",
+                "count": 399,
+                "checked": false
+              },
+              {
+                "key": "m",
+                "count": 380,
+                "checked": true
+              }
+            ]
+          },
+          {
+            "id": "ages",
+            "type": "MULTIPLE_SELECTION",
+            "options": [
+              {
+                "key": "child",
+                "count": 380,
+                "checked": true
+              },
+              {
+                "key": "adult",
+                "count": 2505,
+                "checked": false
+              },
+              {
+                "key": "older",
+                "count": 2182,
+                "checked": false
+              }
+            ]
+          }
+        ]
+      },
+      "verifiers": [
+        "HTTP status is 200",
+        "response.total is greater than or equal to requested resultCount",
+        "response.hits is an array with at least requested resultCount items",
+        "each selected hit exposes a stable id such as NCTId"
+      ],
+      "argMappings": {
+        "statusAggFilter": {
+          "Recruiting and not yet": "status:not rec"
+        },
+        "sexAggFilter": {
+          "Male": "sex:m"
+        },
+        "ageAggFilter": {
+          "Child (birth - 17)": "ages:child"
+        }
+      },
+      "fallbackPolicy": "gui_on_failure",
+      "lastProbe": {
+        "probedAt": "2026-06-11T07:48:23.854Z",
+        "ok": true
+      },
+      "steps": [
+        {
+          "id": "clinic_search_studies",
+          "kind": "requestJson",
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/int/studies",
+          "queryTemplate": {
+            "cond": "{{condition}}",
+            "aggFilters": "{{ageAggFilter}},{{sexAggFilter}},{{statusAggFilter}}",
+            "checkSpell": "true",
+            "from": "0",
+            "limit": "{{limit}}",
+            "fields": "OverallStatus,LastKnownStatus,StatusVerifiedDate,HasResults,BriefTitle,Condition,InterventionType,InterventionName,LocationFacility,LocationCity,LocationState,LocationCountry,LocationStatus,LocationZip,LocationGeoPoint,LocationContactName,LocationContactRole,LocationContactPhone,LocationContactPhoneExt,LocationContactEMail,CentralContactName,CentralContactRole,CentralContactPhone,CentralContactPhoneExt,CentralContactEMail,Gender,MinimumAge,MaximumAge,StdAge,NCTId,StudyType,LeadSponsorName,Acronym,EnrollmentCount,StartDate,PrimaryCompletionDate,CompletionDate,StudyFirstPostDate,ResultsFirstPostDate,LastUpdatePostDate,OrgStudyId,SecondaryId,Phase,LargeDocLabel,LargeDocFilename,PrimaryOutcomeMeasure,SecondaryOutcomeMeasure,DesignAllocation,DesignInterventionModel,DesignMasking,DesignWhoMasked,DesignPrimaryPurpose,DesignObservationalModel,DesignTimePerspective,LeadSponsorClass,CollaboratorClass",
+            "columns": "conditions,interventions,collaborators",
+            "highlight": "true",
+            "sort": "@relevance"
+          }
+        }
+      ]
+    },
+    {
+      "id": "clinic_download_selected_csv",
+      "status": "probed",
+      "kind": "download",
+      "risk": "read_only",
+      "candidateId": "network-152-download-link",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/studies/download",
+      "paramTemplate": {
+        "format": "csv",
+        "cond": "{{condition}}",
+        "aggFilters": "{{ageAggFilter}},{{sexAggFilter}},{{statusAggFilter}}",
+        "sort": "@relevance",
+        "filter.ids": "{{selectedIdsCsv}}",
+        "fields": "NCT Number,Study Title,Study URL,Study Status,Conditions,Interventions,Sponsor,Collaborators,Study Type"
+      },
+      "observed": {
+        "filter.ids": "NCT07625254,NCT07621445,NCT07019025",
+        "selectedIds": [
+          "NCT07625254",
+          "NCT07621445",
+          "NCT07019025"
+        ],
+        "format": "csv"
+      },
+      "verifiers": [
+        "HTTP status is 200",
+        "downloaded file size is greater than 0",
+        "CSV header contains expected exported fields",
+        "CSV rows include selected NCT ids when the response format exposes them"
+      ],
+      "fallbackPolicy": "gui_on_failure",
+      "lastProbe": {
+        "probedAt": "2026-06-11T07:48:23.854Z",
+        "ok": true
+      },
+      "steps": [
+        {
+          "id": "clinic_download_selected_csv",
+          "kind": "download",
+          "method": "GET",
+          "url": "https://clinicaltrials.gov/api/int/studies/download",
+          "queryTemplate": {
+            "format": "csv",
+            "cond": "{{condition}}",
+            "aggFilters": "{{ageAggFilter}},{{sexAggFilter}},{{statusAggFilter}}",
+            "sort": "@relevance",
+            "filter.ids": "{{selectedIdsCsv}}",
+            "fields": "NCT Number,Study Title,Study URL,Study Status,Conditions,Interventions,Sponsor,Collaborators,Study Type"
+          }
+        }
+      ],
+      "argMappings": {
+        "statusAggFilter": {
+          "Recruiting and not yet": "status:not rec"
+        },
+        "sexAggFilter": {
+          "Male": "sex:m"
+        },
+        "ageAggFilter": {
+          "Child (birth - 17)": "ages:child"
+        }
+      }
+    }
+  ],
+  "notes": [
+    "This registry is a candidate fast path, not a replacement for GUI automation.",
+    "The current index.ts remains the GUI mainline. Use `run-skill --api-first` to try this probed API path before falling back to GUI.",
+    "Filter option token mappings still need runtime validation or an option registry before accepting unseen user filter values."
+  ],
+  "risk": "read_only",
+  "fallbackPolicy": "gui_on_failure",
+  "lastProbe": {
+    "probedAt": "2026-06-11T07:48:23.854Z",
+    "ok": true
+  },
+  "lastObservation": {
+    "observedAt": "2026-06-11T07:39:47.086Z",
+    "source": "live-gui-network",
+    "path": "runs\\2026-06-11T07-38-36-179Z-clinic-demo-api-probe\\api_observation.json"
+  }
+}

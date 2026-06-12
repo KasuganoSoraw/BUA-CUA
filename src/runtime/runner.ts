@@ -8,6 +8,9 @@ import { PlaywrightAgent } from '@midscene/web/playwright';
 import { runStepRecovery } from '../recovery/agent.js';
 import { createRecoveryHarness } from '../recovery/harness.js';
 import type { RecoveryOptions } from '../recovery/types.js';
+import { startApiObservation } from './api_observer.js';
+import { loadApiRegistry, runApiFastPath } from './api_fast_path.js';
+import { createApiHelper } from './api.js';
 import { JsonlLogger } from './logger.js';
 import { applyProviderEnvironment, type ProviderName } from './providers.js';
 import type { SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
@@ -27,6 +30,8 @@ type RunnerOptions = {
   headless: boolean;
   skipPreSkills: boolean;
   provider?: ProviderName;
+  apiFirst: boolean;
+  observeApiOutput?: string;
 };
 
 function parseOptions(argv: string[]): RunnerOptions {
@@ -35,6 +40,7 @@ function parseOptions(argv: string[]): RunnerOptions {
     argsPath: '',
     headless: false,
     skipPreSkills: false,
+    apiFirst: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -47,6 +53,10 @@ function parseOptions(argv: string[]): RunnerOptions {
       options.headless = true;
     } else if (arg === '--skip-pre-skills') {
       options.skipPreSkills = true;
+    } else if (arg === '--api-first') {
+      options.apiFirst = true;
+    } else if (arg === '--observe-api-output') {
+      options.observeApiOutput = argv[++index] ?? '';
     } else if (arg === '--qwen') {
       if (options.provider) {
         throw new Error('Use only one provider flag: --qwen or --minimax');
@@ -152,9 +162,10 @@ function makeContext(params: {
   browserContext: SkillContext['browserContext'];
   agent: SkillContext['agent'];
   harness: SkillContext['harness'];
+  api: SkillContext['api'];
   inferredIntent?: string;
 }): SkillContext {
-  const { manifest, logger, page, browser, browserContext, agent, harness, inferredIntent } = params;
+  const { manifest, logger, page, browser, browserContext, agent, harness, api, inferredIntent } = params;
 
   async function screenshot(label: string): Promise<string> {
     const filename = `${label.replace(/[^a-zA-Z0-9_-]+/g, '_')}-${Date.now()}.png`;
@@ -169,6 +180,7 @@ function makeContext(params: {
     browserContext,
     agent,
     harness,
+    api,
     runId: logger.runId,
     skillName: manifest.name,
     inferredIntent,
@@ -430,6 +442,7 @@ async function main(): Promise<void> {
     headless: options.headless,
     provider: options.provider ?? 'env',
     inferredIntent: manifest.inferredIntent,
+    apiFirst: options.apiFirst,
   });
   if (inferredIntent) {
     logger.info(manifest.name, 'inferred_intent_loaded', undefined, {
@@ -452,7 +465,22 @@ async function main(): Promise<void> {
     browserContext,
     artifactDir: logger.artifactDir,
   });
-  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent, harness, inferredIntent });
+  const api = createApiHelper({
+    request: browserContext.request,
+    logger,
+    manifest,
+    artifactDir: logger.artifactDir,
+  });
+  const ctx = makeContext({ manifest, logger, page, browser, browserContext, agent, harness, api, inferredIntent });
+  const stopApiObservation = options.observeApiOutput
+    ? startApiObservation({
+      page,
+      outputPath: path.resolve(options.observeApiOutput),
+      log(type, message, data, level) {
+        logger.write({ level: level ?? 'info', type, skill: manifest.name, message, data });
+      },
+    })
+    : undefined;
 
   try {
     if (!options.skipPreSkills) {
@@ -462,6 +490,26 @@ async function main(): Promise<void> {
         await runSkill({ skillDir: preSkillDir, args: {}, ctx });
         logger.info(manifest.name, 'pre_skill_end', preSkill);
       }
+    }
+
+    if (options.apiFirst) {
+      const registry = loadApiRegistry(skillDir, manifest);
+      const apiResult = await runApiFastPath({
+        registry,
+        args,
+        manifest,
+        api,
+        log(type, message, data, level) {
+          logger.write({ level: level ?? 'info', type, skill: manifest.name, message, data });
+        },
+      });
+      if (apiResult.ok) {
+        logger.info(manifest.name, 'run_end', 'API fast path completed');
+        return;
+      }
+      logger.warn(manifest.name, 'api_first_fallback_to_gui', apiResult.reason, {
+        skipped: apiResult.skipped,
+      });
     }
 
     await runSkill({ skillDir, args, ctx });
@@ -476,6 +524,9 @@ async function main(): Promise<void> {
     );
     process.exitCode = 1;
   } finally {
+    if (stopApiObservation) {
+      await stopApiObservation();
+    }
     if (typeof agent.destroy === 'function') {
       await agent.destroy();
     }

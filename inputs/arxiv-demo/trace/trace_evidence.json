@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 1,
+  "taskName": "arxiv-demo",
+  "traceZip": "inputs/arxiv-demo/trace/trace.zip",
+  "sourceCodegen": "inputs/arxiv-demo/codegen.spec.ts",
+  "generatedAt": "2026-06-05T10:08:49+0800",
+  "traceStatus": "partial",
+  "coverage": {
+    "codegenActionCount": 11,
+    "traceActionCount": 8,
+    "failedActionIndex": 7,
+    "coveredCodegenActions": 8,
+    "uncoveredCodegenActions": [
+      {
+        "line": 12,
+        "text": "await page.getByRole('button', { name: 'Go' }).click();"
+      },
+      {
+        "line": 13,
+        "text": "await page.getByRole('link', { name: 'pdf' }).first().click();"
+      },
+      {
+        "line": 14,
+        "text": "await page.locator('iframe[name=\"8A31C5867E0A8ABA66EE3D5581AF4B04\"]').contentFrame().getByRole('button', { name: '下载' }).click();"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "call@8",
+      "codegenActionIndex": 0,
+      "source": {
+        "line": 4,
+        "text": "await page.goto('https://arxiv.org/');"
+      },
+      "method": "goto",
+      "class": "Frame",
+      "params": {
+        "url": "https://arxiv.org/",
+        "timeout": 0,
+        "waitUntil": "load"
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 3275.556,
+        "endTime": 4202.335
+      },
+      "snapshots": {
+        "before": "before@call@8",
+        "action": null,
+        "after": "after@call@8"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-8-before.jpeg",
+        "action": "evidence-images/call-8-action.jpeg",
+        "after": "evidence-images/call-8-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "about:blank",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": true,
+        "beforeTextSample": [],
+        "afterTextSample": [
+          "Skip to main content",
+          "Learn about arXiv becoming an independent nonprofit.",
+          "We gratefully acknowledge support from the Simons Foundation,",
+          "member institutions",
+          ", and all contributors.",
+          "Donate",
+          "Status",
+          "Login",
+          "Help",
+          "Advanced Search",
+          "All fields",
+          "Title"
+        ]
+      },
+      "resolvedHtml": null,
+      "logs": [
+        "navigating to \"https://arxiv.org/\", waiting until \"load\""
+      ],
+      "error": null
+    },
+    {
+      "id": "call@10",
+      "codegenActionIndex": 1,
+      "source": {
+        "line": 5,
+        "text": "await page.getByRole('textbox', { name: 'Search term or terms' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=textbox[name=\"Search term or terms\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 1017.96,
+        "y": 126.03,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 4221.154,
+        "endTime": 4296.807
+      },
+      "snapshots": {
+        "before": "before@call@10",
+        "action": "input@call@10",
+        "after": "after@call@10"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-10-before.jpeg",
+        "action": "evidence-images/call-10-action.jpeg",
+        "after": "evidence-images/call-10-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+      "logs": [
+        "waiting for getByRole('textbox', { name: 'Search term or terms' })",
+        "locator resolved to <input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@12",
+      "codegenActionIndex": 2,
+      "source": {
+        "line": 6,
+        "text": "await page.getByRole('textbox', { name: 'Search term or terms' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=textbox[name=\"Search term or terms\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 1017.96,
+        "y": 126.03,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 4303.428,
+        "endTime": 4336.24
+      },
+      "snapshots": {
+        "before": "before@call@12",
+        "action": "input@call@12",
+        "after": "after@call@12"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-12-before.jpeg",
+        "action": "evidence-images/call-12-action.jpeg",
+        "after": "evidence-images/call-12-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+      "logs": [
+        "waiting for getByRole('textbox', { name: 'Search term or terms' })",
+        "locator resolved to <input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@14",
+      "codegenActionIndex": 3,
+      "source": {
+        "line": 7,
+        "text": "await page.getByRole('textbox', { name: 'Search term or terms' }).press('CapsLock');"
+      },
+      "method": "press",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=textbox[name=\"Search term or terms\"i]",
+        "strict": true,
+        "key": "CapsLock",
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 4341.968,
+        "endTime": 4360.744
+      },
+      "snapshots": {
+        "before": "before@call@14",
+        "action": "input@call@14",
+        "after": "after@call@14"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-14-before.jpeg",
+        "action": "evidence-images/call-14-action.jpeg",
+        "after": "evidence-images/call-14-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+      "logs": [
+        "waiting for getByRole('textbox', { name: 'Search term or terms' })",
+        "locator resolved to <input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+        "elementHandle.press(\"CapsLock\")"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@16",
+      "codegenActionIndex": 4,
+      "source": {
+        "line": 8,
+        "text": "await page.getByRole('textbox', { name: 'Search term or terms' }).fill('LLM AGENT');"
+      },
+      "method": "fill",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=textbox[name=\"Search term or terms\"i]",
+        "strict": true,
+        "value": "LLM AGENT",
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 4368.252,
+        "endTime": 4384.082
+      },
+      "snapshots": {
+        "before": "before@call@16",
+        "action": "input@call@16",
+        "after": "after@call@16"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-16-before.jpeg",
+        "action": "evidence-images/call-16-action.jpeg",
+        "after": "evidence-images/call-16-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+      "logs": [
+        "waiting for getByRole('textbox', { name: 'Search term or terms' })",
+        "locator resolved to <input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+        "fill(\"LLM AGENT\")",
+        "attempting fill action",
+        "waiting for element to be visible, enabled and editable"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@18",
+      "codegenActionIndex": 5,
+      "source": {
+        "line": 9,
+        "text": "await page.getByRole('textbox', { name: 'Search term or terms' }).press('CapsLock');"
+      },
+      "method": "press",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:role=textbox[name=\"Search term or terms\"i]",
+        "strict": true,
+        "key": "CapsLock",
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "passed",
+      "timing": {
+        "startTime": 4388.463,
+        "endTime": 4405.956
+      },
+      "snapshots": {
+        "before": "before@call@18",
+        "action": "input@call@18",
+        "after": "after@call@18"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-18-before.jpeg",
+        "action": "evidence-images/call-18-action.jpeg",
+        "after": "evidence-images/call-18-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": "https://arxiv.org/",
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+      "logs": [
+        "waiting for getByRole('textbox', { name: 'Search term or terms' })",
+        "locator resolved to <input type=\"text\" name=\"query\" class=\"input is-small\" placeholder=\"Search...\" aria-label=\"Search term or terms\"/>",
+        "elementHandle.press(\"CapsLock\")"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@20",
+      "codegenActionIndex": 6,
+      "source": {
+        "line": 10,
+        "text": "await page.locator('#header').getByRole('button', { name: 'Search' }).click();"
+      },
+      "method": "click",
+      "class": "Frame",
+      "params": {
+        "selector": "#header >> internal:role=button[name=\"Search\"i]",
+        "strict": true,
+        "timeout": 0
+      },
+      "inputPoint": {
+        "x": 1235.98,
+        "y": 126.03,
+        "coordinateSpace": "viewport",
+        "note": "Point is captured from Playwright trace input event and is only valid for the recorded viewport."
+      },
+      "status": "passed",
+      "timing": {
+        "startTime": 4412.349,
+        "endTime": 5607.499
+      },
+      "snapshots": {
+        "before": "before@call@20",
+        "action": "input@call@20",
+        "after": "after@call@20"
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-20-before.jpeg",
+        "action": "evidence-images/call-20-action.jpeg",
+        "after": "evidence-images/call-20-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": "https://arxiv.org/",
+        "afterUrl": null,
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": "<button class=\"button is-small is-cul-darker\">Search</button>",
+      "logs": [
+        "waiting for locator('#header').getByRole('button', { name: 'Search' })",
+        "locator resolved to <button class=\"button is-small is-cul-darker\">Search</button>",
+        "attempting click action",
+        "waiting for element to be visible, enabled and stable",
+        "element is visible, enabled and stable",
+        "scrolling into view if needed",
+        "done scrolling",
+        "performing click action",
+        "click action done",
+        "waiting for scheduled navigations to finish",
+        "navigated to \"https://arxiv.org/search?query=LLM+AGENT&searchtype=all&source=header\"",
+        "navigations have finished"
+      ],
+      "error": null
+    },
+    {
+      "id": "call@22",
+      "codegenActionIndex": 7,
+      "source": {
+        "line": 11,
+        "text": "await page.getByLabel('Sort results by').selectOption('');"
+      },
+      "method": "selectOption",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:label=\"Sort results by\"i",
+        "strict": true,
+        "options": [
+          {
+            "valueOrLabel": ""
+          }
+        ],
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "failed",
+      "timing": {
+        "startTime": 5609.903,
+        "endTime": null
+      },
+      "snapshots": {
+        "before": "before@call@22",
+        "action": null,
+        "after": null
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-22-before.jpeg",
+        "action": "evidence-images/call-22-action.jpeg",
+        "after": "evidence-images/call-22-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": null,
+        "afterUrl": null,
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": null,
+      "logs": [
+        "waiting for getByLabel('Sort results by')"
+      ],
+      "error": null
+    }
+  ],
+  "failure": {
+    "action": {
+      "id": "call@22",
+      "codegenActionIndex": 7,
+      "source": {
+        "line": 11,
+        "text": "await page.getByLabel('Sort results by').selectOption('');"
+      },
+      "method": "selectOption",
+      "class": "Frame",
+      "params": {
+        "selector": "internal:label=\"Sort results by\"i",
+        "strict": true,
+        "options": [
+          {
+            "valueOrLabel": ""
+          }
+        ],
+        "timeout": 0
+      },
+      "inputPoint": null,
+      "status": "failed",
+      "timing": {
+        "startTime": 5609.903,
+        "endTime": null
+      },
+      "snapshots": {
+        "before": "before@call@22",
+        "action": null,
+        "after": null
+      },
+      "selectedFrames": {
+        "before": "evidence-images/call-22-before.jpeg",
+        "action": "evidence-images/call-22-action.jpeg",
+        "after": "evidence-images/call-22-after.jpeg"
+      },
+      "state": {
+        "beforeUrl": null,
+        "afterUrl": null,
+        "urlChanged": false,
+        "beforeTextSample": [],
+        "afterTextSample": []
+      },
+      "resolvedHtml": null,
+      "logs": [
+        "waiting for getByLabel('Sort results by')"
+      ],
+      "error": null
+    },
+    "testErrors": [
+      {
+        "type": "error",
+        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+        "stack": []
+      },
+      {
+        "type": "error",
+        "message": "Error: locator.selectOption: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Sort results by')\u001b[22m\n",
+        "stack": [
+          {
+            "file": "E:\\HW\\GUI_Agent_Explore\\inputs\\arxiv-demo\\trace\\compiled\\codegen.spec.js",
+            "line": 10,
+            "column": 46
+          }
+        ]
+      }
+    ],
+    "errorContexts": [
+      "# Instructions\n\n- Following Playwright test failed.\n- Explain why, be concise, respect Playwright best practices.\n- Provide a snippet of code with the fix, if possible.\n\n# Test info\n\n- Name: inputs\\arxiv-demo\\trace\\compiled\\codegen.spec.js >> test\n- Location: inputs\\arxiv-demo\\trace\\compiled\\codegen.spec.js:2:1\n\n# Error details\n\n```\nTest timeout of 30000ms exceeded.\n```\n\n```\nError: locator.selectOption: Test timeout of 30000ms exceeded.\nCall log:\n  - waiting for getByLabel('Sort results by')\n\n```\n\n# Page snapshot\n\n```yaml\n- generic [active] [ref=e1]: Rate exceeded.\n```\n\n# Test source\n\n```ts\n  1  | import { test } from '@playwright/test';\n  2  | test('test', async ({ page }) => {\n  3  |     await page.goto('https://arxiv.org/');\n  4  |     await page.getByRole('textbox', { name: 'Search term or terms' }).click();\n  5  |     await page.getByRole('textbox', { name: 'Search term or terms' }).click();\n  6  |     await page.getByRole('textbox', { name: 'Search term or terms' }).press('CapsLock');\n  7  |     await page.getByRole('textbox', { name: 'Search term or terms' }).fill('LLM AGENT');\n  8  |     await page.getByRole('textbox', { name: 'Search term or terms' }).press('CapsLock');\n  9  |     await page.locator('#header').getByRole('button', { name: 'Search' }).click();\n> 10 |     await page.getByLabel('Sort results by').selectOption('');\n     |                                              ^ Error: locator.selectOption: Test timeout of 30000ms exceeded.\n  11 |     await page.getByRole('button', { name: 'Go' }).click();\n  12 |     await page.getByRole('link', { name: 'pdf' }).first().click();\n  13 |     await page.locator('iframe[name=\"8A31C5867E0A8ABA66EE3D5581AF4B04\"]').contentFrame().getByRole('button', { name: '下载' }).click();\n  14 | });\n  15 | \n```"
+    ]
+  },
+  "notes": [
+    "This file contains engineering-extracted facts from Playwright trace.zip.",
+    "It does not contain model-generated semantic step descriptions.",
+    "inputPoint coordinates are viewport-local and should be interpreted with the selected action frame.",
+    "selectedFrames are sampled from Playwright screencast frames and are auxiliary visual evidence."
+  ]
+}

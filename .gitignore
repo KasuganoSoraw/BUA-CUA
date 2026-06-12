@@ -27,7 +27,10 @@ auth/recorder-*/
 downloads/
 test-results/
 .playwright-tmp/
-inputs/*/trace/
+inputs/*/trace/*
+!inputs/*/trace/
+!inputs/*/trace/trace_evidence.json
+!inputs/*/trace/api_candidates.json
 
 # Node
 node_modules/

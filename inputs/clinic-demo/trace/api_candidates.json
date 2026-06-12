@@ -1,0 +1,1196 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-11T11:17:14+0800",
+  "status": "candidate",
+  "candidates": [
+    {
+      "id": "network-069-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=&dictionary=Condition",
+      "query": {
+        "input": [
+          ""
+        ],
+        "dictionary": [
+          "Condition"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 137,
+        "jsonSummary": {
+          "type": "list",
+          "length": 5,
+          "sample": [
+            "heart attack",
+            "\"heart attack\" treatment",
+            "(head OR neck) AND cancer",
+            "AREA[Condition]breast cancer",
+            "NCT04412252, NCT04368728"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 69,
+        "startedDateTime": "2026-06-05T03:50:55.159Z"
+      }
+    },
+    {
+      "id": "network-070-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=&dictionary=InterventionName",
+      "query": {
+        "input": [
+          ""
+        ],
+        "dictionary": [
+          "InterventionName"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 74,
+        "jsonSummary": {
+          "type": "list",
+          "length": 4,
+          "sample": [
+            "Aspirin",
+            "Ibuprofen",
+            "Lung Protective Ventilation",
+            "physiotherapy"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 70,
+        "startedDateTime": "2026-06-05T03:50:55.163Z"
+      }
+    },
+    {
+      "id": "network-071-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=&dictionary=LeadSponsorName",
+      "query": {
+        "input": [
+          ""
+        ],
+        "dictionary": [
+          "LeadSponsorName"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 63,
+        "jsonSummary": {
+          "type": "list",
+          "length": 2,
+          "sample": [
+            "National Institutes of Health",
+            "Johns Hopkins University"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 71,
+        "startedDateTime": "2026-06-05T03:50:55.222Z"
+      }
+    },
+    {
+      "id": "network-072-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=&dictionary=LocationFacility",
+      "query": {
+        "input": [
+          ""
+        ],
+        "dictionary": [
+          "LocationFacility"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 66,
+        "jsonSummary": {
+          "type": "list",
+          "length": 3,
+          "sample": [
+            "Johns Hopkins Hospital",
+            "Research Facility",
+            "Clinical Site"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 72,
+        "startedDateTime": "2026-06-05T03:50:55.226Z"
+      }
+    },
+    {
+      "id": "network-078-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=dia&dictionary=Condition",
+      "query": {
+        "input": [
+          "dia"
+        ],
+        "dictionary": [
+          "Condition"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 115,
+        "jsonSummary": {
+          "type": "list",
+          "length": 5,
+          "sample": [
+            "Diabetes Mellitus Type 2",
+            "Diabetes",
+            "Diabetes Mellitus",
+            "Diabetes Mellitus Type 1",
+            "Diabetic Retinopathy"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 78,
+        "startedDateTime": "2026-06-05T03:50:55.781Z"
+      }
+    },
+    {
+      "id": "network-087-suggest",
+      "kind": "suggest",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/suggest",
+      "observedUrl": "https://clinicaltrials.gov/api/int/suggest?input=Diabetes&dictionary=Condition",
+      "query": {
+        "input": [
+          "Diabetes"
+        ],
+        "dictionary": [
+          "Condition"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 110,
+        "jsonSummary": {
+          "type": "list",
+          "length": 5,
+          "sample": [
+            "Diabetes Mellitus Type 2",
+            "Diabetes",
+            "Diabetes Mellitus",
+            "Diabetes Mellitus Type 1",
+            "Diabetes Type 2"
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 87,
+        "startedDateTime": "2026-06-05T03:50:56.739Z"
+      }
+    },
+    {
+      "id": "network-111-query",
+      "kind": "query",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/studies",
+      "observedUrl": "https://clinicaltrials.gov/api/int/studies?cond=Diabetes&aggFilters=status%3Anot%20rec&checkSpell=true&from=0&limit=10&fields=OverallStatus%2CLastKnownStatus%2CStatusVerifiedDate%2CHasResults%2CBriefTitle%2CCondition%2CInterventionType%2CInterventionName%2CLocationFacility%2CLocationCity%2CLocationState%2CLocationCountry%2CLocationStatus%2CLocationZip%2CLocationGeoPoint%2CLocationContactName%2CLocationContactRole%2CLocationContactPhone%2CLocationContactPhoneExt%2CLocationContactEMail%2CCentralContactName%2CCentralContactRole%2CCentralContactPhone%2CCentralContactPhoneExt%2CCentralContactEMail%2CGender%2CMinimumAge%2CMaximumAge%2CStdAge%2CNCTId%2CStudyType%2CLeadSponsorName%2CAcronym%2CEnrollmentCount%2CStartDate%2CPrimaryCompletionDate%2CCompletionDate%2CStudyFirstPostDate%2CResultsFirstPostDate%2CLastUpdatePostDate%2COrgStudyId%2CSecondaryId%2CPhase%2CLargeDocLabel%2CLargeDocFilename%2CPrimaryOutcomeMeasure%2CSecondaryOutcomeMeasure%2CDesignAllocation%2CDesignInterventionModel%2CDesignMasking%2CDesignWhoMasked%2CDesignPrimaryPurpose%2CDesignObservationalModel%2CDesignTimePerspective%2CLeadSponsorClass%2CCollaboratorClass&columns=conditions%2Cinterventions%2Ccollaborators&highlight=true&sort=%40relevance",
+      "query": {
+        "cond": [
+          "Diabetes"
+        ],
+        "aggFilters": [
+          "status:not rec"
+        ],
+        "checkSpell": [
+          "true"
+        ],
+        "from": [
+          "0"
+        ],
+        "limit": [
+          "10"
+        ],
+        "fields": [
+          "OverallStatus,LastKnownStatus,StatusVerifiedDate,HasResults,BriefTitle,Condition,InterventionType,InterventionName,LocationFacility,LocationCity,LocationState,LocationCountry,LocationStatus,LocationZip,LocationGeoPoint,LocationContactName,LocationContactRole,LocationContactPhone,LocationContactPhoneExt,LocationContactEMail,CentralContactName,CentralContactRole,CentralContactPhone,CentralContactPhoneExt,CentralContactEMail,Gender,MinimumAge,MaximumAge,StdAge,NCTId,StudyType,LeadSponsorName,Acronym,EnrollmentCount,StartDate,PrimaryCompletionDate,CompletionDate,StudyFirstPostDate,ResultsFirstPostDate,LastUpdatePostDate,OrgStudyId,SecondaryId,Phase,LargeDocLabel,LargeDocFilename,PrimaryOutcomeMeasure,SecondaryOutcomeMeasure,DesignAllocation,DesignInterventionModel,DesignMasking,DesignWhoMasked,DesignPrimaryPurpose,DesignObservationalModel,DesignTimePerspective,LeadSponsorClass,CollaboratorClass"
+        ],
+        "columns": [
+          "conditions,interventions,collaborators"
+        ],
+        "highlight": [
+          "true"
+        ],
+        "sort": [
+          "@relevance"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 43032,
+        "jsonSummary": {
+          "topLevelKeys": [
+            "from",
+            "limit",
+            "total",
+            "terms",
+            "hits",
+            "aggs",
+            "aggFilters",
+            "signals",
+            "profileResults"
+          ],
+          "total": 2843,
+          "from": 0,
+          "limit": 10,
+          "hitCount": 10,
+          "sampleHitIds": [
+            "NCT07204782",
+            "NCT07503548",
+            "NCT07625254",
+            "NCT07307183",
+            "NCT07229534",
+            "NCT07239440",
+            "NCT07589387",
+            "NCT07343648",
+            "NCT07083401",
+            "NCT06822218"
+          ],
+          "aggFilterGroups": [
+            {
+              "id": "status",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "not",
+                  "count": 901,
+                  "checked": true
+                },
+                {
+                  "key": "rec",
+                  "count": 1942,
+                  "checked": true
+                },
+                {
+                  "key": "act",
+                  "count": 731,
+                  "checked": false
+                },
+                {
+                  "key": "com",
+                  "count": 14910,
+                  "checked": false
+                },
+                {
+                  "key": "ter",
+                  "count": 1200,
+                  "checked": false
+                },
+                {
+                  "key": "enr",
+                  "count": 207,
+                  "checked": false
+                },
+                {
+                  "key": "sus",
+                  "count": 73,
+                  "checked": false
+                },
+                {
+                  "key": "wit",
+                  "count": 597,
+                  "checked": false
+                },
+                {
+                  "key": "unk",
+                  "count": 3327,
+                  "checked": false
+                },
+                {
+                  "key": "ava",
+                  "count": 3,
+                  "checked": false
+                },
+                {
+                  "key": "nla",
+                  "count": 7,
+                  "checked": false
+                },
+                {
+                  "key": "tna",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "afm",
+                  "count": 1,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "sex",
+              "type": "SINGLE_SELECTION",
+              "options": [
+                {
+                  "key": "all",
+                  "count": 2843,
+                  "checked": true
+                },
+                {
+                  "key": "f",
+                  "count": 2809,
+                  "checked": false
+                },
+                {
+                  "key": "m",
+                  "count": 2623,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "ages",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "child",
+                  "count": 399,
+                  "checked": false
+                },
+                {
+                  "key": "adult",
+                  "count": 2722,
+                  "checked": false
+                },
+                {
+                  "key": "older",
+                  "count": 2287,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "healthy",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "y",
+                  "count": 685,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "phase",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "0",
+                  "count": 43,
+                  "checked": false
+                },
+                {
+                  "key": "1",
+                  "count": 151,
+                  "checked": false
+                },
+                {
+                  "key": "2",
+                  "count": 225,
+                  "checked": false
+                },
+                {
+                  "key": "3",
+                  "count": 144,
+                  "checked": false
+                },
+                {
+                  "key": "4",
+                  "count": 156,
+                  "checked": false
+                },
+                {
+                  "key": "NA",
+                  "count": 1396,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "studyType",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "int",
+                  "count": 2049,
+                  "checked": false
+                },
+                {
+                  "key": "obs",
+                  "count": 794,
+                  "checked": false
+                },
+                {
+                  "key": "obs_patreg",
+                  "count": 153,
+                  "checked": false,
+                  "parentKey": "obs"
+                },
+                {
+                  "key": "exp",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "exp_indiv",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                },
+                {
+                  "key": "exp_inter",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                },
+                {
+                  "key": "exp_treat",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                }
+              ]
+            },
+            {
+              "id": "results",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "with",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "without",
+                  "count": 2843,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "funderType",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "nih",
+                  "count": 238,
+                  "checked": false
+                },
+                {
+                  "key": "fed",
+                  "count": 32,
+                  "checked": false
+                },
+                {
+                  "key": "industry",
+                  "count": 582,
+                  "checked": false
+                },
+                {
+                  "key": "other",
+                  "count": 2471,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "docs",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "prot",
+                  "count": 78,
+                  "checked": false
+                },
+                {
+                  "key": "sap",
+                  "count": 46,
+                  "checked": false
+                },
+                {
+                  "key": "icf",
+                  "count": 69,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "violation",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "y",
+                  "count": 0,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "ressub",
+              "type": "SINGLE_SELECTION",
+              "options": [
+                {
+                  "key": "all",
+                  "count": 2843,
+                  "checked": true
+                },
+                {
+                  "key": "n",
+                  "count": 2818,
+                  "checked": false
+                },
+                {
+                  "key": "y",
+                  "count": 25,
+                  "checked": false
+                },
+                {
+                  "key": "c",
+                  "count": 6,
+                  "checked": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=status:not%20rec&viewType=Card"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 111,
+        "startedDateTime": "2026-06-05T03:50:57.785Z"
+      }
+    },
+    {
+      "id": "network-132-query",
+      "kind": "query",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/studies",
+      "observedUrl": "https://clinicaltrials.gov/api/int/studies?cond=Diabetes&aggFilters=ages%3Achild%2Csex%3Am%2Cstatus%3Anot%20rec&checkSpell=true&from=0&limit=10&fields=OverallStatus%2CLastKnownStatus%2CStatusVerifiedDate%2CHasResults%2CBriefTitle%2CCondition%2CInterventionType%2CInterventionName%2CLocationFacility%2CLocationCity%2CLocationState%2CLocationCountry%2CLocationStatus%2CLocationZip%2CLocationGeoPoint%2CLocationContactName%2CLocationContactRole%2CLocationContactPhone%2CLocationContactPhoneExt%2CLocationContactEMail%2CCentralContactName%2CCentralContactRole%2CCentralContactPhone%2CCentralContactPhoneExt%2CCentralContactEMail%2CGender%2CMinimumAge%2CMaximumAge%2CStdAge%2CNCTId%2CStudyType%2CLeadSponsorName%2CAcronym%2CEnrollmentCount%2CStartDate%2CPrimaryCompletionDate%2CCompletionDate%2CStudyFirstPostDate%2CResultsFirstPostDate%2CLastUpdatePostDate%2COrgStudyId%2CSecondaryId%2CPhase%2CLargeDocLabel%2CLargeDocFilename%2CPrimaryOutcomeMeasure%2CSecondaryOutcomeMeasure%2CDesignAllocation%2CDesignInterventionModel%2CDesignMasking%2CDesignWhoMasked%2CDesignPrimaryPurpose%2CDesignObservationalModel%2CDesignTimePerspective%2CLeadSponsorClass%2CCollaboratorClass&columns=conditions%2Cinterventions%2Ccollaborators&highlight=true&sort=%40relevance",
+      "query": {
+        "cond": [
+          "Diabetes"
+        ],
+        "aggFilters": [
+          "ages:child,sex:m,status:not rec"
+        ],
+        "checkSpell": [
+          "true"
+        ],
+        "from": [
+          "0"
+        ],
+        "limit": [
+          "10"
+        ],
+        "fields": [
+          "OverallStatus,LastKnownStatus,StatusVerifiedDate,HasResults,BriefTitle,Condition,InterventionType,InterventionName,LocationFacility,LocationCity,LocationState,LocationCountry,LocationStatus,LocationZip,LocationGeoPoint,LocationContactName,LocationContactRole,LocationContactPhone,LocationContactPhoneExt,LocationContactEMail,CentralContactName,CentralContactRole,CentralContactPhone,CentralContactPhoneExt,CentralContactEMail,Gender,MinimumAge,MaximumAge,StdAge,NCTId,StudyType,LeadSponsorName,Acronym,EnrollmentCount,StartDate,PrimaryCompletionDate,CompletionDate,StudyFirstPostDate,ResultsFirstPostDate,LastUpdatePostDate,OrgStudyId,SecondaryId,Phase,LargeDocLabel,LargeDocFilename,PrimaryOutcomeMeasure,SecondaryOutcomeMeasure,DesignAllocation,DesignInterventionModel,DesignMasking,DesignWhoMasked,DesignPrimaryPurpose,DesignObservationalModel,DesignTimePerspective,LeadSponsorClass,CollaboratorClass"
+        ],
+        "columns": [
+          "conditions,interventions,collaborators"
+        ],
+        "highlight": [
+          "true"
+        ],
+        "sort": [
+          "@relevance"
+        ]
+      },
+      "response": {
+        "status": 200,
+        "mimeType": "application/json",
+        "size": 68207,
+        "jsonSummary": {
+          "topLevelKeys": [
+            "from",
+            "limit",
+            "total",
+            "terms",
+            "hits",
+            "aggs",
+            "aggFilters",
+            "signals",
+            "profileResults"
+          ],
+          "total": 380,
+          "from": 0,
+          "limit": 10,
+          "hitCount": 10,
+          "sampleHitIds": [
+            "NCT07625254",
+            "NCT07621445",
+            "NCT07019025",
+            "NCT03648918",
+            "NCT05866536",
+            "NCT02722655",
+            "NCT07031141",
+            "NCT06770673",
+            "NCT07228117",
+            "NCT06320600"
+          ],
+          "aggFilterGroups": [
+            {
+              "id": "status",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "not",
+                  "count": 104,
+                  "checked": true
+                },
+                {
+                  "key": "rec",
+                  "count": 276,
+                  "checked": true
+                },
+                {
+                  "key": "act",
+                  "count": 100,
+                  "checked": false
+                },
+                {
+                  "key": "com",
+                  "count": 1859,
+                  "checked": false
+                },
+                {
+                  "key": "ter",
+                  "count": 104,
+                  "checked": false
+                },
+                {
+                  "key": "enr",
+                  "count": 43,
+                  "checked": false
+                },
+                {
+                  "key": "sus",
+                  "count": 6,
+                  "checked": false
+                },
+                {
+                  "key": "wit",
+                  "count": 68,
+                  "checked": false
+                },
+                {
+                  "key": "unk",
+                  "count": 415,
+                  "checked": false
+                },
+                {
+                  "key": "ava",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "nla",
+                  "count": 4,
+                  "checked": false
+                },
+                {
+                  "key": "tna",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "afm",
+                  "count": 0,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "sex",
+              "type": "SINGLE_SELECTION",
+              "options": [
+                {
+                  "key": "all",
+                  "count": 399,
+                  "checked": false
+                },
+                {
+                  "key": "f",
+                  "count": 399,
+                  "checked": false
+                },
+                {
+                  "key": "m",
+                  "count": 380,
+                  "checked": true
+                }
+              ]
+            },
+            {
+              "id": "ages",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "child",
+                  "count": 380,
+                  "checked": true
+                },
+                {
+                  "key": "adult",
+                  "count": 2505,
+                  "checked": false
+                },
+                {
+                  "key": "older",
+                  "count": 2182,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "healthy",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "y",
+                  "count": 103,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "phase",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "0",
+                  "count": 4,
+                  "checked": false
+                },
+                {
+                  "key": "1",
+                  "count": 7,
+                  "checked": false
+                },
+                {
+                  "key": "2",
+                  "count": 26,
+                  "checked": false
+                },
+                {
+                  "key": "3",
+                  "count": 10,
+                  "checked": false
+                },
+                {
+                  "key": "4",
+                  "count": 4,
+                  "checked": false
+                },
+                {
+                  "key": "NA",
+                  "count": 160,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "studyType",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "int",
+                  "count": 204,
+                  "checked": false
+                },
+                {
+                  "key": "obs",
+                  "count": 176,
+                  "checked": false
+                },
+                {
+                  "key": "obs_patreg",
+                  "count": 42,
+                  "checked": false,
+                  "parentKey": "obs"
+                },
+                {
+                  "key": "exp",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "exp_indiv",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                },
+                {
+                  "key": "exp_inter",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                },
+                {
+                  "key": "exp_treat",
+                  "count": 0,
+                  "checked": false,
+                  "parentKey": "exp"
+                }
+              ]
+            },
+            {
+              "id": "results",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "with",
+                  "count": 0,
+                  "checked": false
+                },
+                {
+                  "key": "without",
+                  "count": 380,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "funderType",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "nih",
+                  "count": 43,
+                  "checked": false
+                },
+                {
+                  "key": "fed",
+                  "count": 4,
+                  "checked": false
+                },
+                {
+                  "key": "industry",
+                  "count": 56,
+                  "checked": false
+                },
+                {
+                  "key": "other",
+                  "count": 335,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "docs",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "prot",
+                  "count": 10,
+                  "checked": false
+                },
+                {
+                  "key": "sap",
+                  "count": 5,
+                  "checked": false
+                },
+                {
+                  "key": "icf",
+                  "count": 11,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "violation",
+              "type": "MULTIPLE_SELECTION",
+              "options": [
+                {
+                  "key": "y",
+                  "count": 0,
+                  "checked": false
+                }
+              ]
+            },
+            {
+              "id": "ressub",
+              "type": "SINGLE_SELECTION",
+              "options": [
+                {
+                  "key": "all",
+                  "count": 380,
+                  "checked": true
+                },
+                {
+                  "key": "n",
+                  "count": 377,
+                  "checked": false
+                },
+                {
+                  "key": "y",
+                  "count": 3,
+                  "checked": false
+                },
+                {
+                  "key": "c",
+                  "count": 0,
+                  "checked": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "headers": {
+        "request": [
+          {
+            "name": "accept",
+            "value": "application/json, text/plain, */*"
+          },
+          {
+            "name": "referer",
+            "value": "https://clinicaltrials.gov/search?cond=Diabetes&aggFilters=ages:child,sex:m,status:not%20rec&viewType=Card"
+          },
+          {
+            "name": "sec-fetch-mode",
+            "value": "cors"
+          },
+          {
+            "name": "sec-fetch-site",
+            "value": "same-origin"
+          }
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "networkIndex": 132,
+        "startedDateTime": "2026-06-05T03:50:58.864Z"
+      }
+    },
+    {
+      "id": "network-152-download-link",
+      "kind": "download",
+      "status": "candidate",
+      "method": "GET",
+      "url": "https://clinicaltrials.gov/api/int/studies/download",
+      "observedUrl": "https://clinicaltrials.gov/api/int/studies/download?format=csv&cond=Diabetes&aggFilters=ages:child,sex:m,status:not+rec&sort=@relevance&filter.ids=NCT07625254,NCT07621445,NCT07019025&fields=NCT+Number,Study+Title,Study+URL,Study+Status,Conditions,Interventions,Sponsor,Collaborators,Study+Type",
+      "query": {
+        "format": [
+          "csv"
+        ],
+        "cond": [
+          "Diabetes"
+        ],
+        "aggFilters": [
+          "ages:child,sex:m,status:not rec"
+        ],
+        "sort": [
+          "@relevance"
+        ],
+        "filter.ids": [
+          "NCT07625254,NCT07621445,NCT07019025"
+        ],
+        "fields": [
+          "NCT Number,Study Title,Study URL,Study Status,Conditions,Interventions,Sponsor,Collaborators,Study Type"
+        ]
+      },
+      "source": {
+        "traceNetwork": "0-trace.network",
+        "extractedFrom": "analytics link_href",
+        "networkIndex": 152
+      },
+      "evidence": {
+        "note": "Download URL was observed inside a click analytics request. Probe before using as a fast path.",
+        "selectedIds": [
+          "NCT07625254",
+          "NCT07621445",
+          "NCT07019025"
+        ]
+      }
+    }
+  ],
+  "notes": [
+    "This file contains engineering-extracted API candidates from Playwright trace network records.",
+    "Candidates are not trusted fast paths until probed and verified.",
+    "Read/download candidates may be used by a Task Skill as API fast path with GUI fallback.",
+    "Write/destructive API candidates must require manual review before execution."
+  ]
+}

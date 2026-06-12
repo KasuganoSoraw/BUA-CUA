@@ -1,6 +1,7 @@
 import type { Browser, BrowserContext, Page } from 'playwright';
 import type { RecoveryHarness } from '../recovery/harness.js';
 import type { RecoveryOptions } from '../recovery/types.js';
+import type { ApiHelper } from './api.js';
 
 export type SkillArgs = Record<string, unknown>;
 
@@ -11,6 +12,8 @@ export type SkillManifest = {
   description?: string;
   entry: string;
   inferredIntent?: string;
+  apiRegistry?: string;
+  knowledge?: string;
   risk: 'read_only' | 'write_review_required' | 'destructive_review_required';
   requiresSession?: boolean;
   preSkills?: string[];
@@ -36,6 +39,7 @@ export type SkillContext = {
   browserContext: BrowserContext;
   agent: any;
   harness: RecoveryHarness;
+  api: ApiHelper;
   runId: string;
   skillName: string;
   inferredIntent?: string;

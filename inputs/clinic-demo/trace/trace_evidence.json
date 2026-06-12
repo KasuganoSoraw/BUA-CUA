@@ -3,7 +3,7 @@
   "taskName": "clinic-demo",
   "traceZip": "inputs/clinic-demo/trace/trace.zip",
   "sourceCodegen": "inputs/clinic-demo/codegen.spec.ts",
-  "generatedAt": "2026-06-08T10:37:42+0800",
+  "generatedAt": "2026-06-11T11:17:14+0800",
   "traceStatus": "passed",
   "coverage": {
     "codegenActionCount": 14,

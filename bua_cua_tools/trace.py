@@ -12,7 +12,7 @@ import time
 import zipfile
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -498,6 +498,236 @@ def verifier_candidates_from_delta(delta: dict[str, Any]) -> list[dict[str, Any]
     return candidates[:20]
 
 
+def response_header(headers: list[dict[str, Any]], name: str) -> str | None:
+    target = name.lower()
+    for header in headers:
+        if str(header.get("name", "")).lower() == target:
+            return str(header.get("value", ""))
+    return None
+
+
+def network_records_from_trace(archive: zipfile.ZipFile) -> list[dict[str, Any]]:
+    network_name = next((name for name in archive.namelist() if name.endswith("-trace.network")), None)
+    if not network_name:
+        return []
+    records = read_jsonl_from_zip(archive, network_name)
+    snapshots = []
+    for record in records:
+        snapshot = record.get("snapshot")
+        if isinstance(snapshot, dict):
+            snapshots.append(snapshot)
+    return snapshots
+
+
+def parse_query(url: str) -> dict[str, list[str]]:
+    return {key: [unquote(item) for item in value] for key, value in parse_qs(urlparse(url).query, keep_blank_values=True).items()}
+
+
+def summarize_json_body(body: Any) -> dict[str, Any]:
+    if isinstance(body, list):
+        return {
+            "type": "list",
+            "length": len(body),
+            "sample": body[:5],
+        }
+    if not isinstance(body, dict):
+        return {"type": type(body).__name__}
+    summary: dict[str, Any] = {
+        "topLevelKeys": list(body.keys())[:30],
+    }
+    for key in ["total", "from", "limit"]:
+        if key in body and isinstance(body[key], (str, int, float, bool)):
+            summary[key] = body[key]
+    hits = body.get("hits")
+    if isinstance(hits, list):
+        summary["hitCount"] = len(hits)
+        sample_ids = []
+        for hit in hits[:10]:
+            if isinstance(hit, dict):
+                sample_ids.append(hit.get("id") or hit.get("nctId"))
+        summary["sampleHitIds"] = [item for item in sample_ids if item]
+    agg_filters = body.get("aggFilters")
+    if isinstance(agg_filters, list):
+        groups = []
+        for group in agg_filters[:20]:
+            if not isinstance(group, dict):
+                continue
+            options = []
+            for option in group.get("options", [])[:30]:
+                if isinstance(option, dict):
+                    options.append(
+                        {
+                            key: option.get(key)
+                            for key in ["key", "count", "checked", "parentKey"]
+                            if key in option
+                        }
+                    )
+            groups.append(
+                {
+                    "id": group.get("id"),
+                    "type": group.get("type"),
+                    "options": options,
+                }
+            )
+        summary["aggFilterGroups"] = groups
+    return summary
+
+
+def read_response_json(archive: zipfile.ZipFile, snapshot: dict[str, Any]) -> Any | None:
+    sha1 = snapshot.get("response", {}).get("content", {}).get("_sha1")
+    if not sha1:
+        return None
+    resource = f"resources/{sha1}"
+    if resource not in archive.namelist():
+        return None
+    try:
+        return json.loads(archive.read(resource).decode("utf-8", errors="replace"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+
+
+def candidate_kind(path: str, query: dict[str, list[str]]) -> str | None:
+    if path.endswith("/api/int/suggest"):
+        return "suggest"
+    if path.endswith("/api/int/studies/download"):
+        return "download"
+    if path.endswith("/api/int/studies"):
+        return "query"
+    if "/api/" in path:
+        return "api"
+    if "link_href" in query and any("/api/int/studies/download" in item for item in query.get("link_href", [])):
+        return "download_link_evidence"
+    return None
+
+
+def scrub_headers(headers: list[dict[str, Any]]) -> list[dict[str, str]]:
+    keep = {"accept", "content-type", "referer", "sec-fetch-mode", "sec-fetch-site"}
+    scrubbed = []
+    for header in headers:
+        name = str(header.get("name", ""))
+        lower = name.lower()
+        if lower in keep:
+            scrubbed.append({"name": name, "value": str(header.get("value", ""))})
+    return scrubbed[:20]
+
+
+def normalize_candidate_url(url: str) -> str:
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def build_api_candidate(
+    archive: zipfile.ZipFile,
+    index: int,
+    snapshot: dict[str, Any],
+) -> dict[str, Any] | None:
+    request = snapshot.get("request", {})
+    response = snapshot.get("response", {})
+    url = str(request.get("url", ""))
+    parsed = urlparse(url)
+    query = parse_query(url)
+    kind = candidate_kind(parsed.path, query)
+    if kind == "download_link_evidence":
+        href = query.get("link_href", [""])[0]
+        if not href:
+            return None
+        href_query = parse_query(href)
+        return {
+            "id": f"network-{index:03d}-download-link",
+            "kind": "download",
+            "status": "candidate",
+            "method": "GET",
+            "url": normalize_candidate_url(href),
+            "observedUrl": href,
+            "query": href_query,
+            "source": {
+                "traceNetwork": "0-trace.network",
+                "extractedFrom": "analytics link_href",
+                "networkIndex": index,
+            },
+            "evidence": {
+                "note": "Download URL was observed inside a click analytics request. Probe before using as a fast path.",
+                "selectedIds": href_query.get("filter.ids", [""])[0].split(",") if href_query.get("filter.ids") else [],
+            },
+        }
+    if not kind:
+        return None
+    status = response.get("status")
+    if status != 200:
+        return None
+    headers = response.get("headers", [])
+    mime_type = response.get("content", {}).get("mimeType") or response_header(headers, "content-type")
+    body = read_response_json(archive, snapshot) if status == 200 and mime_type and "json" in str(mime_type).lower() else None
+    candidate: dict[str, Any] = {
+        "id": f"network-{index:03d}-{kind}",
+        "kind": kind,
+        "status": "candidate",
+        "method": request.get("method"),
+        "url": normalize_candidate_url(url),
+        "observedUrl": url,
+        "query": query,
+        "response": {
+            "status": status,
+            "mimeType": mime_type,
+            "size": response.get("content", {}).get("size"),
+        },
+        "headers": {
+            "request": scrub_headers(request.get("headers", [])),
+        },
+        "source": {
+            "traceNetwork": "0-trace.network",
+            "networkIndex": index,
+            "startedDateTime": snapshot.get("startedDateTime"),
+        },
+    }
+    if body is not None:
+        candidate["response"]["jsonSummary"] = summarize_json_body(body)
+    if status != 200:
+        candidate["notes"] = ["Request did not complete successfully in trace; keep only as weak evidence."]
+    return candidate
+
+
+def extract_api_candidates(archive: zipfile.ZipFile) -> dict[str, Any]:
+    candidates: list[dict[str, Any]] = []
+    for index, snapshot in enumerate(network_records_from_trace(archive), start=1):
+        candidate = build_api_candidate(archive, index, snapshot)
+        if candidate:
+            candidates.append(candidate)
+
+    # Deduplicate repeated successful candidates by method + URL + query.
+    seen: set[str] = set()
+    deduped: list[dict[str, Any]] = []
+    for candidate in candidates:
+        key = json.dumps(
+            {
+                "kind": candidate.get("kind"),
+                "method": candidate.get("method"),
+                "url": candidate.get("url"),
+                "query": candidate.get("query"),
+                "status": candidate.get("response", {}).get("status"),
+            },
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(candidate)
+
+    return {
+        "schemaVersion": 1,
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "status": "candidate",
+        "candidates": deduped,
+        "notes": [
+            "This file contains engineering-extracted API candidates from Playwright trace network records.",
+            "Candidates are not trusted fast paths until probed and verified.",
+            "Read/download candidates may be used by a Task Skill as API fast path with GUI fallback.",
+            "Write/destructive API candidates must require manual review before execution.",
+        ],
+    }
+
+
 def nearest_frame(
     frames: list[dict[str, Any]],
     page_id: str | None,
@@ -714,9 +944,14 @@ def command_summarize_trace(args: argparse.Namespace) -> int:
             ],
         }
 
+        api_candidates = extract_api_candidates(archive)
+
     output_path = trace_dir / "trace_evidence.json"
     output_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    api_output_path = trace_dir / "api_candidates.json"
+    api_output_path.write_text(json.dumps(api_candidates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Trace evidence saved: {output_path}")
+    print(f"API candidates saved: {api_output_path}")
     print(f"Evidence images saved: {image_dir}")
     print(f"Trace status: {output['traceStatus']}")
     return 0

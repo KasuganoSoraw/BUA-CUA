@@ -13,7 +13,18 @@ from pathlib import Path
 from typing import Any
 
 from bua_cua_tools.generate import command_generate_skill, command_model_preflight
+from bua_cua_tools.intent import (
+    CONFIDENCE_THRESHOLD,
+    load_skill_catalog,
+    resolve_intent_with_model,
+    resolve_runtime_config,
+    run_skill_with_args,
+    timestamp_for_run,
+    validate_args_against_schema,
+    write_resolution_artifacts,
+)
 from bua_cua_tools.providers import apply_provider_environment, selected_provider
+from bua_cua_tools.recovery_cases import command_extract_recovery_cases
 from bua_cua_tools.trace import command_summarize_trace, command_trace_codegen
 
 
@@ -26,6 +37,13 @@ REQUIRED_SKILL_FIELDS = {
     "argsSchema",
     "risk",
 }
+
+API_REGISTRY_STATUSES = {"candidate", "probed", "approved", "rejected"}
+API_REGISTRY_RISKS = {"read_only", "write_review_required", "destructive_review_required"}
+API_FALLBACK_POLICIES = {"gui_on_failure", "stop_on_uncertain", "forbidden"}
+SENSITIVE_API_REGISTRY_TOKENS = {"apikey", "api_key", "authorization", "cookie", "set-cookie", "bearer"}
+KNOWLEDGE_ARRAY_FIELDS = {"optionMappings", "recoveryCases", "selectorHints"}
+SENSITIVE_KNOWLEDGE_TOKENS = {"apikey", "api_key", "authorization", "cookie", "set-cookie", "bearer"}
 
 
 def skill_dir(name_or_path: str) -> Path:
@@ -174,6 +192,75 @@ def validate_skill(path: Path) -> list[str]:
         elif not (path / inferred_intent).exists():
             errors.append(f"Missing inferred intent file: {path / inferred_intent}")
 
+    api_registry = manifest.get("apiRegistry")
+    if api_registry is not None:
+        if not isinstance(api_registry, str):
+            errors.append("skill.json field `apiRegistry` must be a string when present")
+        elif not (path / api_registry).exists():
+            errors.append(f"Missing API registry file: {path / api_registry}")
+        else:
+            try:
+                registry = load_json(path / api_registry)
+            except json.JSONDecodeError as exc:
+                errors.append(f"Invalid JSON in API registry file {path / api_registry}: {exc}")
+            else:
+                if not isinstance(registry, dict):
+                    errors.append(f"API registry file must contain a JSON object: {path / api_registry}")
+                else:
+                    registry_text = json.dumps(registry, ensure_ascii=False).lower()
+                    if any(token in registry_text for token in SENSITIVE_API_REGISTRY_TOKENS):
+                        errors.append("API registry must not contain API keys, cookies, authorization headers, or bearer tokens")
+                    status = registry.get("status")
+                    if status is not None and status not in API_REGISTRY_STATUSES:
+                        errors.append("api_registry.json field `status` must be one of candidate, probed, approved, rejected")
+                    risk = registry.get("risk")
+                    if risk is not None and risk not in API_REGISTRY_RISKS:
+                        errors.append("api_registry.json field `risk` must be one of read_only, write_review_required, destructive_review_required")
+                    fallback_policy = registry.get("fallbackPolicy")
+                    if fallback_policy is not None and fallback_policy not in API_FALLBACK_POLICIES:
+                        errors.append("api_registry.json field `fallbackPolicy` must be one of gui_on_failure, stop_on_uncertain, forbidden")
+                    fast_paths = registry.get("fastPaths", [])
+                    if fast_paths is not None and not isinstance(fast_paths, list):
+                        errors.append("api_registry.json field `fastPaths` must be an array when present")
+                    for index, fast_path in enumerate(fast_paths if isinstance(fast_paths, list) else []):
+                        if not isinstance(fast_path, dict):
+                            errors.append(f"api_registry.json fastPaths[{index}] must be an object")
+                            continue
+                        if not isinstance(fast_path.get("id"), str) or not fast_path.get("id"):
+                            errors.append(f"api_registry.json fastPaths[{index}].id must be a non-empty string")
+                        if fast_path.get("status") not in API_REGISTRY_STATUSES:
+                            errors.append(f"api_registry.json fastPaths[{index}].status must be one of candidate, probed, approved, rejected")
+                        if fast_path.get("risk") not in API_REGISTRY_RISKS:
+                            errors.append(f"api_registry.json fastPaths[{index}].risk must be one of read_only, write_review_required, destructive_review_required")
+                        if fast_path.get("fallbackPolicy") is not None and fast_path.get("fallbackPolicy") not in API_FALLBACK_POLICIES:
+                            errors.append(f"api_registry.json fastPaths[{index}].fallbackPolicy must be one of gui_on_failure, stop_on_uncertain, forbidden")
+
+    knowledge = manifest.get("knowledge")
+    if knowledge is not None:
+        if not isinstance(knowledge, str):
+            errors.append("skill.json field `knowledge` must be a string when present")
+        elif not (path / knowledge).exists():
+            errors.append(f"Missing knowledge file: {path / knowledge}")
+        else:
+            try:
+                knowledge_payload = load_json(path / knowledge)
+            except json.JSONDecodeError as exc:
+                errors.append(f"Invalid JSON in knowledge file {path / knowledge}: {exc}")
+            else:
+                if not isinstance(knowledge_payload, dict):
+                    errors.append(f"Knowledge file must contain a JSON object: {path / knowledge}")
+                else:
+                    knowledge_text = json.dumps(knowledge_payload, ensure_ascii=False).lower()
+                    if any(token in knowledge_text for token in SENSITIVE_KNOWLEDGE_TOKENS):
+                        errors.append("knowledge.json must not contain API keys, cookies, authorization headers, or bearer tokens")
+                    if not isinstance(knowledge_payload.get("schemaVersion"), int):
+                        errors.append("knowledge.json field `schemaVersion` must be an integer")
+                    if "apiFastPaths" in knowledge_payload:
+                        errors.append("knowledge.json must not contain apiFastPaths; keep API fast paths in api_registry.json")
+                    for field in KNOWLEDGE_ARRAY_FIELDS:
+                        if field in knowledge_payload and not isinstance(knowledge_payload[field], list):
+                            errors.append(f"knowledge.json field `{field}` must be an array")
+
     if not (path / "SKILL.md").exists():
         errors.append(f"Missing SKILL.md: {path / 'SKILL.md'}")
 
@@ -229,9 +316,158 @@ def command_run_skill(args: argparse.Namespace) -> int:
         node_args.append("--headless")
     if args.skip_pre_skills:
         node_args.append("--skip-pre-skills")
+    if args.api_first:
+        node_args.append("--api-first")
     if provider:
         node_args.append(f"--{provider}")
 
+    completed = subprocess.run(node_args, cwd=ROOT)
+    return completed.returncode
+
+
+def command_run_intent(args: argparse.Namespace) -> int:
+    try:
+        provider = selected_provider(args)
+        apply_provider_environment(provider, ROOT / ".env")
+        model, base_url, api_key, timeout, json_mode, disable_thinking = resolve_runtime_config(args.timeout)
+    except (RuntimeError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    catalog = load_skill_catalog(only_skill=args.skill)
+    if not catalog:
+        if args.skill:
+            print(f"ERROR: No runnable Task Skill found for --skill {args.skill}", file=sys.stderr)
+        else:
+            print("ERROR: No runnable Task Skills found under skills/.", file=sys.stderr)
+        return 1
+
+    try:
+        resolution = resolve_intent_with_model(
+            args.intent,
+            catalog,
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+            timeout=timeout,
+            only_skill=args.skill,
+            json_mode=json_mode,
+            disable_thinking=disable_thinking,
+        )
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+    selected = next(
+        (item for item in catalog if resolution.skill in {item.get("directory"), item.get("name")}),
+        None,
+    )
+    if selected is None:
+        selected = next(
+            (
+                item
+                for item in catalog
+                if isinstance(item.get("directory"), str) and str(item["directory"]) in resolution.skill
+            ),
+            None,
+        )
+    if not selected:
+        run_dir = ROOT / "runs" / f"{timestamp_for_run()}-intent"
+        selected_manifest: dict[str, Any] = {}
+        write_resolution_artifacts(
+            resolution,
+            intent=args.intent,
+            run_dir=run_dir,
+            selected_manifest=selected_manifest,
+            validation_errors=[f"selected skill is not in catalog: {resolution.skill}"],
+            selected_skill_directory=None,
+        )
+        print(f"ERROR: Model selected unknown skill: {resolution.skill}", file=sys.stderr)
+        print(f"Intent resolution written to: {run_dir}")
+        return 1
+
+    selected_skill_dir = ROOT / "skills" / str(selected["directory"])
+    manifest = load_json(selected_skill_dir / "skill.json")
+    validation_errors = validate_args_against_schema(manifest.get("argsSchema", {}), resolution.args)
+    run_dir = ROOT / "runs" / f"{timestamp_for_run()}-intent"
+    args_path = write_resolution_artifacts(
+        resolution,
+        intent=args.intent,
+        run_dir=run_dir,
+        selected_manifest=manifest,
+        validation_errors=validation_errors,
+        selected_skill_directory=str(selected["directory"]),
+    )
+
+    print(f"Intent resolution written to: {run_dir}")
+    print(f"Selected skill: {selected['directory']} (confidence={resolution.confidence:.2f})")
+    print(f"Args: {args_path}")
+
+    if resolution.confidence < args.confidence_threshold:
+        print(
+            f"ERROR: Intent confidence {resolution.confidence:.2f} is below threshold {args.confidence_threshold:.2f}.",
+            file=sys.stderr,
+        )
+        return 1
+    if resolution.missing:
+        print(f"ERROR: Missing required intent parameters: {', '.join(resolution.missing)}", file=sys.stderr)
+        return 1
+    if validation_errors:
+        print("ERROR: Resolved args do not match selected skill argsSchema:", file=sys.stderr)
+        for error in validation_errors:
+            print(f"  - {error}", file=sys.stderr)
+        return 1
+    if args.dry_run:
+        print("Dry run complete; browser execution skipped.")
+        return 0
+    if manifest.get("risk") != "read_only":
+        print(
+            f"ERROR: Refusing to auto-run non-read-only skill `{selected['directory']}` with risk={manifest.get('risk')}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    return run_skill_with_args(
+        skill_dir=selected_skill_dir,
+        args_path=args_path,
+        headless=args.headless,
+        skip_pre_skills=args.skip_pre_skills,
+        api_first=args.api_first,
+        provider=provider,
+    )
+
+
+def command_probe_api(args: argparse.Namespace) -> int:
+    path = skill_dir(args.skill)
+    errors = validate_skill(path)
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+
+    manifest = load_json(path / "skill.json")
+    if manifest.get("risk") != "read_only":
+        print("ERROR: probe-api only supports read_only skills in the first version.", file=sys.stderr)
+        return 1
+    if not manifest.get("apiRegistry"):
+        print("ERROR: skill.json has no apiRegistry field.", file=sys.stderr)
+        return 1
+
+    base_args = tsx_args("src/runtime/probe_api.ts")
+    if base_args is None:
+        return 1
+
+    node_args = [
+        *base_args,
+        "--skill",
+        str(path),
+        "--args",
+        str(Path(args.args).resolve()),
+    ]
+    if args.observe_gui:
+        node_args.append("--observe-gui")
+    if args.headless:
+        node_args.append("--headless")
     completed = subprocess.run(node_args, cwd=ROOT)
     return completed.returncode
 
@@ -254,46 +490,6 @@ def command_model_preflight_with_provider(args: argparse.Namespace) -> int:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     return command_model_preflight(args)
-
-
-def command_record(args: argparse.Namespace) -> int:
-    target = ROOT / "inputs" / args.task
-    target.mkdir(parents=True, exist_ok=True)
-    recording_dir = target / "recording"
-    recording_dir.mkdir(parents=True, exist_ok=True)
-
-    base_args = tsx_args("recorder/index.ts")
-    if base_args is None:
-        return 1
-
-    node_args = [
-        *base_args,
-        "--task",
-        args.task,
-        "--url",
-        args.url,
-        "--output",
-        str(recording_dir.resolve()),
-    ]
-    if args.user_data_dir:
-        node_args.extend(["--user-data-dir", str(Path(args.user_data_dir).resolve())])
-    if args.channel:
-        node_args.extend(["--channel", args.channel])
-
-    process = subprocess.Popen(node_args, cwd=ROOT)
-    try:
-        return process.wait()
-    except KeyboardInterrupt:
-        print("\nRecorder interrupted. Waiting briefly for recording files to flush...", file=sys.stderr)
-        try:
-            return process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            process.terminate()
-            try:
-                return process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                return process.wait()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -327,16 +523,38 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--args", required=True, help="path to skill args JSON")
     run.add_argument("--headless", action="store_true", help="run browser headless")
     run.add_argument("--skip-pre-skills", action="store_true")
+    run.add_argument("--api-first", action="store_true", help="try probed/approved read-only API fast path before GUI")
     run.add_argument("--qwen", action="store_true", help="use qwen provider config from .env")
     run.add_argument("--minimax", action="store_true", help="use minimax provider config from .env")
     run.set_defaults(func=command_run_skill)
 
-    record = subparsers.add_parser("record", help="record raw browser evidence for an input pack")
-    record.add_argument("task")
-    record.add_argument("--url", required=True, help="start URL for headed enhanced recording")
-    record.add_argument("--user-data-dir", help="optional persistent browser profile directory")
-    record.add_argument("--channel", help="optional Playwright browser channel, for example chrome or msedge")
-    record.set_defaults(func=command_record)
+    run_intent = subparsers.add_parser("run-intent", help="resolve natural language intent into a Task Skill run")
+    run_intent.add_argument("intent", help="natural language task intent")
+    run_intent.add_argument("--skill", help="optional skill name; when set, only extract args for this skill")
+    run_intent.add_argument("--dry-run", action="store_true", help="resolve intent and write args without running the browser")
+    run_intent.add_argument("--headless", action="store_true", help="run browser headless")
+    run_intent.add_argument("--skip-pre-skills", action="store_true")
+    run_intent.add_argument("--api-first", action="store_true", help="try API fast path after intent resolution")
+    run_intent.add_argument("--confidence-threshold", type=float, default=CONFIDENCE_THRESHOLD)
+    run_intent.add_argument("--timeout", type=int, help="model request timeout in seconds")
+    run_intent.add_argument("--qwen", action="store_true", help="use qwen provider config from .env")
+    run_intent.add_argument("--minimax", action="store_true", help="use minimax provider config from .env")
+    run_intent.set_defaults(func=command_run_intent)
+
+    probe = subparsers.add_parser("probe-api", help="probe and solidify a read-only API fast path for a skill")
+    probe.add_argument("skill")
+    probe.add_argument("--args", required=True, help="path to skill args JSON")
+    probe.add_argument("--observe-gui", action="store_true", help="run the GUI mainline while capturing live network API observations")
+    probe.add_argument("--headless", action="store_true", help="use headless browser for --observe-gui")
+    probe.set_defaults(func=command_probe_api)
+
+    recovery_cases = subparsers.add_parser(
+        "extract-recovery-cases",
+        help="extract structured recovery_cases.json from a runtime JSONL log",
+    )
+    recovery_cases.add_argument("run", help="run id, partial run id, or path to runs/<run-id>.jsonl")
+    recovery_cases.add_argument("--output-dir", help="optional output directory; defaults to runs/<run-id>/")
+    recovery_cases.set_defaults(func=command_extract_recovery_cases)
 
     trace = subparsers.add_parser("trace-codegen", help="run an input codegen script with Playwright trace enabled")
     trace.add_argument("task")

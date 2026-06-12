@@ -23,7 +23,9 @@ METADATA_GENERATED_FILES = {
     "INFERRED_INTENT.md",
     "fixtures/input.example.json",
 }
+OPTIONAL_METADATA_GENERATED_FILES = {"api_registry.json"}
 INDEX_GENERATED_FILES = {"index.ts"}
+OPTIONAL_GENERATED_FILES = OPTIONAL_METADATA_GENERATED_FILES
 REQUIRED_GENERATED_FILES = METADATA_GENERATED_FILES | INDEX_GENERATED_FILES
 RISK_VALUES = {"read_only", "write_review_required", "destructive_review_required"}
 RECOVERY_TOOL_NAMES = {
@@ -46,6 +48,7 @@ class GenerationInputs:
     user_steps: str
     codegen_script: str
     trace_evidence_json: str
+    api_candidates_json: str
 
 
 def load_dotenv(path: Path) -> dict[str, str]:
@@ -268,10 +271,49 @@ def compact_trace_evidence(trace_evidence: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def compact_api_candidates(api_candidates: dict[str, Any]) -> dict[str, Any]:
+    compacted = []
+    for candidate in api_candidates.get("candidates", []):
+        if not isinstance(candidate, dict):
+            continue
+        response = candidate.get("response") if isinstance(candidate.get("response"), dict) else {}
+        json_summary = response.get("jsonSummary") if isinstance(response, dict) else None
+        if isinstance(json_summary, dict) and isinstance(json_summary.get("aggFilterGroups"), list):
+            json_summary = {
+                **json_summary,
+                "aggFilterGroups": json_summary["aggFilterGroups"][:12],
+            }
+        compacted.append(
+            {
+                "id": candidate.get("id"),
+                "kind": candidate.get("kind"),
+                "status": candidate.get("status"),
+                "method": candidate.get("method"),
+                "url": candidate.get("url"),
+                "query": candidate.get("query"),
+                "response": {
+                    "status": response.get("status") if isinstance(response, dict) else None,
+                    "mimeType": response.get("mimeType") if isinstance(response, dict) else None,
+                    "size": response.get("size") if isinstance(response, dict) else None,
+                    "jsonSummary": json_summary,
+                },
+                "evidence": candidate.get("evidence"),
+                "notes": candidate.get("notes"),
+            }
+        )
+    return {
+        "schemaVersion": api_candidates.get("schemaVersion"),
+        "status": api_candidates.get("status"),
+        "candidates": compacted[:30],
+        "notes": api_candidates.get("notes"),
+    }
+
+
 def load_generation_inputs(task: str) -> GenerationInputs:
     input_dir = ROOT / "inputs" / task
     codegen_path = input_dir / "codegen.spec.ts"
     trace_evidence_path = input_dir / "trace" / "trace_evidence.json"
+    api_candidates_path = input_dir / "trace" / "api_candidates.json"
     prompt_path = ROOT / "prompts" / "task_skill_generation.md"
 
     if not codegen_path.exists():
@@ -282,6 +324,10 @@ def load_generation_inputs(task: str) -> GenerationInputs:
     intent = read_optional(input_dir / "intent.md")
     steps = read_optional(input_dir / "steps.md")
     trace_evidence = compact_trace_evidence(json.loads(trace_evidence_path.read_text(encoding="utf-8")))
+    api_candidates_json = ""
+    if api_candidates_path.exists():
+        api_candidates = compact_api_candidates(json.loads(api_candidates_path.read_text(encoding="utf-8")))
+        api_candidates_json = json.dumps(api_candidates, ensure_ascii=False, indent=2)
     user_intent = intent if not is_placeholder(intent) else "用户未提供真实自然语言意图，请根据 codegen 和 trace_evidence 推断任务目标。"
     user_steps = steps if not is_placeholder(steps) else "用户未提供人工步骤说明。"
     return GenerationInputs(
@@ -291,6 +337,7 @@ def load_generation_inputs(task: str) -> GenerationInputs:
         user_steps=user_steps,
         codegen_script=codegen_path.read_text(encoding="utf-8"),
         trace_evidence_json=json.dumps(trace_evidence, ensure_ascii=False, indent=2),
+        api_candidates_json=api_candidates_json or "未提供 api_candidates.json。",
     )
 
 
@@ -329,6 +376,11 @@ Playwright codegen 脚本：
 ```json
 {inputs.trace_evidence_json}
 ```
+
+工程提取的 api_candidates.json：
+```json
+{inputs.api_candidates_json}
+```
 """
 
 
@@ -346,9 +398,12 @@ def build_metadata_generation_prompt(inputs: GenerationInputs) -> list[dict[str,
   - SKILL.md
   - INFERRED_INTENT.md
   - fixtures/input.example.json
+  - api_registry.json（可选，仅当 api_candidates.json 中存在对本任务有帮助的 read/download API candidate 时生成）
 - `skill.json.name` 必须使用 `{inputs.task}`。
 - `skill.json.entry` 必须是 `index.ts`。
 - `skill.json.inferredIntent` 必须是 `INFERRED_INTENT.md`。
+- 如果生成 `api_registry.json`，`skill.json.apiRegistry` 必须是 `api_registry.json`。
+- `api_registry.json` 只能记录 candidate 或 verified fast path 的元数据，不得包含 API key、cookie、authorization header 或本地隐私信息。
 - `INFERRED_INTENT.md` 必须明确说明：这是模型根据 codegen 与 trace_evidence 推断的人类任务意图，不是用户手写原始意图。
 - 参数只能来自自然语言可表达、或能在页面中通过稳定文案/状态定位的业务参数；不要把 DOM id、radio id、checkbox id、内部 hit id 设计成用户输入参数。
 - 不要生成 `recordings/codegen.spec.ts`，该文件由工具复制原始 codegen。
@@ -385,6 +440,7 @@ def build_index_generation_prompt(inputs: GenerationInputs, metadata_files: dict
 - `index.ts` 必须导出 `run(ctx: SkillContext, args: Record<string, unknown>): Promise<void>`。
 - `index.ts` 必须可被当前项目 `npm run typecheck` 检查。
 - 网页业务操作 step 应优先使用 `ctx.withRecovery`；无稳定 primary path 时才使用 `ctx.recoverStep`。
+- 如果第一阶段生成了 `api_registry.json`，第二阶段可以参考它理解可选 API 路线，但不要把 API-first 逻辑写进 `index.ts`。`index.ts` 必须保持 GUI 主链路；API fast path 由 `probe-api` 固化，并由 `run-skill --api-first` 在运行时优先尝试，失败后回退 GUI。
 - verifier 必须按业务 step 判断状态达成，不要把下一步要点击的按钮可见性当作当前 step 的 verifier。
 - 如果 trace logs 显示下一步 click 会自动 `scrolling into view if needed`，不要在前一步强行 `toBeVisible()` 验证该按钮。
 - 下载类 step 应以 Playwright download event 和非空文件作为最终 verifier。
@@ -482,6 +538,17 @@ def validate_metadata_files(files: dict[str, str]) -> None:
         raise ValueError("Generated skill.json entry must be `index.ts`")
     if manifest.get("inferredIntent") != "INFERRED_INTENT.md":
         raise ValueError("Generated skill.json inferredIntent must be `INFERRED_INTENT.md`")
+    api_registry = manifest.get("apiRegistry")
+    if "api_registry.json" in files:
+        if api_registry != "api_registry.json":
+            raise ValueError("Generated skill.json apiRegistry must be `api_registry.json` when api_registry.json is generated")
+        registry = json.loads(files["api_registry.json"])
+        if not isinstance(registry, dict):
+            raise ValueError("Generated api_registry.json must be a JSON object")
+        if "apiKey" in json.dumps(registry, ensure_ascii=False).lower() or "authorization" in json.dumps(registry, ensure_ascii=False).lower():
+            raise ValueError("Generated api_registry.json must not include API keys or authorization headers")
+    elif api_registry is not None:
+        raise ValueError("Generated skill.json must not reference apiRegistry unless api_registry.json is generated")
     fixture = json.loads(files["fixtures/input.example.json"])
     if not isinstance(fixture, dict):
         raise ValueError("Generated fixtures/input.example.json must be a JSON object")
@@ -517,7 +584,7 @@ def validate_generated_files(files: dict[str, str]) -> None:
     validate_index_file({"index.ts": files["index.ts"]})
 
 
-def parse_file_generation(content: str, required_files: set[str]) -> dict[str, str]:
+def parse_file_generation(content: str, required_files: set[str], optional_files: set[str] | None = None) -> dict[str, str]:
     text = content.strip()
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text)
@@ -526,7 +593,8 @@ def parse_file_generation(content: str, required_files: set[str]) -> dict[str, s
     files = payload.get("files")
     if not isinstance(files, dict):
         raise ValueError("Generation output must contain object field `files`")
-    unknown = set(files) - required_files
+    optional_files = optional_files or set()
+    unknown = set(files) - required_files - optional_files
     missing = required_files - set(files)
     if unknown or missing:
         raise ValueError(f"Invalid generated file set. missing={sorted(missing)} unknown={sorted(unknown)}")
@@ -539,7 +607,7 @@ def parse_file_generation(content: str, required_files: set[str]) -> dict[str, s
 
 
 def parse_generation(content: str) -> dict[str, str]:
-    files = parse_file_generation(content, REQUIRED_GENERATED_FILES)
+    files = parse_file_generation(content, REQUIRED_GENERATED_FILES, OPTIONAL_GENERATED_FILES)
     validate_generated_files(files)
     return files
 
@@ -554,6 +622,7 @@ def generate_file_set(
     api_key: str,
     timeout: int,
     *,
+    optional_files: set[str] | None = None,
     json_mode: bool = True,
     disable_thinking: bool = False,
 ) -> dict[str, str]:
@@ -565,11 +634,12 @@ def generate_file_set(
             base_url,
             api_key,
             timeout,
+            optional_files=OPTIONAL_METADATA_GENERATED_FILES,
             json_mode=json_mode,
             disable_thinking=disable_thinking,
         )
         try:
-            files = parse_file_generation(content, required_files)
+            files = parse_file_generation(content, required_files, optional_files)
             validator(files)
             return files
         except Exception as exc:

@@ -4,7 +4,7 @@ BUA-CUA Toolkit 是一个面向 agent 的网页任务自动化工具包，不是
 
 它提供两类能力：
 
-- **生成 Task Skill**：基于自然语言任务描述、Playwright codegen 录制脚本和可选 enhanced recorder 证据，生成经过人工审查后可执行的 Playwright + Midscene 混编脚本。
+- **生成 Task Skill**：基于自然语言任务描述、Playwright codegen 录制脚本和 Playwright trace 工程证据，生成经过人工审查后可执行的 Playwright + Midscene 混编脚本。
 - **执行 Task Skill**：通过 Python CLI 和 Node/TS Runtime 加载、校验并执行已经生成的 Task Skill。
 
 具体网页任务自动化能力称为 **Task Skill**，位于 `skills/<task_name>/`，例如 `login_to_nms` 或 `mock_query_eline_service_info`。
@@ -98,6 +98,28 @@ inputs/arxiv-demo/
   steps.md
 ```
 
+### 使用自然语言运行 Task Skill
+
+```powershell
+uv run bua-cua run-intent "<用自然语言描述要完成的网页任务>" --minimax
+```
+
+如果已经知道要使用哪个 Skill，可以固定 Skill，只让模型抽取本次运行参数：
+
+```powershell
+uv run bua-cua run-intent "<用自然语言描述该 Skill 的本次参数>" --skill <task_name> --dry-run --minimax
+```
+
+`run-intent` 会把解析结果写入 `runs/<timestamp>-intent/intent_resolution.json`，并把本次运行参数写入 `runs/<timestamp>-intent/args.json`。
+
+### 从运行日志提取 Recovery Cases
+
+```powershell
+uv run bua-cua extract-recovery-cases <run_id>
+```
+
+该命令会把一次运行中的 recovery 相关 JSONL 日志结构化为 `runs/<run_id>/recovery_cases.json`，用于后续分析和人工 promote。
+
 `intent.md` 写用户自然语言任务意图，`codegen.spec.ts` 放 Playwright codegen 录制脚本。
 
 如果你已经准备开始官方 Playwright codegen 录制，通常不需要先手动执行 `scaffold-input`，可以直接使用下面的一键命令。
@@ -127,39 +149,6 @@ uv run bua-cua codegen arxiv-demo --url https://arxiv.org/ --channel chrome --us
 ```powershell
 npx playwright codegen --target=playwright-test -o .\inputs\arxiv-demo\codegen.spec.ts https://arxiv.org/
 ```
-
-### 启动 enhanced recorder 证据录制
-
-enhanced recorder 不替代官方 Playwright codegen。第一版它只记录 raw evidence，例如 viewport 截图、点击坐标、局部 DOM evidence、selector 候选和 before/after 状态。
-
-```powershell
-uv run bua-cua record arxiv-demo --url https://arxiv.org/
-```
-
-如果目标站点对全新浏览器上下文比较敏感，可以使用独立的持久化 profile，并指定真实浏览器 channel：
-
-```powershell
-uv run bua-cua record arxiv-demo --url https://www.baidu.com/ --channel chrome --user-data-dir .\auth\recorder-chrome-profile
-```
-
-不要直接把日常个人浏览器 profile 作为 `--user-data-dir`。建议使用项目内独立目录，让站点逐步积累正常 cookie/session，同时避免污染个人浏览器数据。
-
-输出目录：
-
-```text
-inputs/arxiv-demo/recording/
-  recording.json
-  actions/action-001.json
-  screenshots/action-001-before.png
-  screenshots/action-001-after.png
-  screenshots/action-001-annotated.png
-```
-
-对于带有点击坐标的动作，recorder 会额外生成 `*-annotated.png`。该图片基于操作前截图生成，其中的红色十字、圆圈和中心圆点是 recorder 后处理添加的，用于提示人类操作位置，不是网页自身 UI。
-
-如果 recorder 比日常浏览器更容易触发安全验证，通常是因为默认 Playwright 使用全新的临时 profile，没有历史 cookie、登录态和长期行为记录，也可能被站点识别为自动化浏览器。优先尝试 `--user-data-dir` 和 `--channel chrome`。
-
-当前第一版可能需要录制两次：一次使用官方 `npx playwright codegen` 生成脚本轨迹，一次使用 `uv run bua-cua record ...` 生成证据轨迹。若两次录制存在细微差异，生成 Task Skill 时以 `codegen.spec.ts` 的业务顺序为准，`recording/` 仅作为 verifier、locator 和 recovery 的辅助证据。
 
 ### 运行原始 codegen 录制脚本
 
@@ -209,6 +198,7 @@ npx playwright show-trace .\inputs\arxiv-demo\trace\trace.zip
 ### 提取 trace 工程证据
 
 `summarize-trace` 不调用模型，只从 Playwright `trace.zip` 中提取可审计 facts，包括 action 顺序、locator、源码行、before/action/after snapshot id、精选截图、resolved HTML、日志、失败信息和 coverage。
+同时它会从 trace network 中提取 `api_candidates.json`，记录查询、自动补全、下载等候选 API。API candidates 只是事实层候选，不代表已经验证可直接替代 GUI。
 
 ```powershell
 uv run bua-cua summarize-trace arxiv-demo
@@ -219,10 +209,12 @@ uv run bua-cua summarize-trace arxiv-demo
 ```text
 inputs/arxiv-demo/trace/
   trace_evidence.json
+  api_candidates.json
   evidence-images/
 ```
 
 `trace_evidence.json` 是后续让模型生成自然语言步骤、verifier 和 recovery hints 的事实输入。模型生成的语义描述必须引用其中的 action id / snapshot / frame evidence。
+`api_candidates.json` 是生成 API fast path / `api_registry.json` 的事实输入。它不得包含 API key、cookie 或 authorization header；候选接口必须经过 probe 或运行时 verifier，失败时回退 GUI。
 
 ### 生成 Task Skill
 
@@ -232,7 +224,6 @@ inputs/arxiv-demo/trace/
 prompts/task_skill_generation.md
 inputs/<task>/intent.md
 inputs/<task>/codegen.spec.ts
-inputs/<task>/recording/recording.json  # 可选 raw evidence
 inputs/<task>/trace/trace.zip           # 可选 Playwright trace evidence
 inputs/<task>/trace/trace_evidence.json # 必须，工程事实层
 ```
@@ -256,12 +247,16 @@ skills/<task>/
   skill.json
   SKILL.md
   INFERRED_INTENT.md
+  api_registry.json          # 可选，API fast path 候选/验证信息
+  knowledge.json             # 可选，运行后沉淀的 GUI 知识，不包含 API fast path
   index.ts
   fixtures/input.example.json
   recordings/codegen.spec.ts
 ```
 
-`INFERRED_INTENT.md` 必须说明它是 LLM 根据 `intent.md`、`codegen.spec.ts`、`trace_evidence.json` 和可选 raw evidence 推测生成的任务意图。它可作为后续执行与 step recovery 的参考，但不是工程事实层；事实层仍以 `trace_evidence.json` 为准。
+`INFERRED_INTENT.md` 必须说明它是 LLM 根据 `intent.md`、`codegen.spec.ts` 和 `trace_evidence.json` 推测生成的任务意图。它可作为后续执行与 step recovery 的参考，但不是工程事实层；事实层仍以 `trace_evidence.json` 为准。
+
+`knowledge.json` 是运行学习层，用来承接显式 promote 后的 GUI option mapping、recovery case 和 selector hint。它不保存 API fast path；API 仍保留在独立 `api_registry.json`。
 
 ### 校验 Task Skill
 
@@ -285,6 +280,124 @@ uv run bua-cua run-skill arxiv-demo --args .\skills\arxiv-demo\fixtures\input.ex
 ```
 
 执行日志会写入 `runs/`，失败截图会写入 `runs/artifacts/`。
+
+### 自然语言执行 Task Skill
+
+`run-intent` 是面向最终用户的入口。它会读取本地 `skills/*/skill.json`、`SKILL.md` 和 `INFERRED_INTENT.md`，调用模型选择合适的 Task Skill，并从自然语言中抽取参数，生成本次运行专用的 args JSON 后再调用 `run-skill`。
+
+```powershell
+uv run bua-cua run-intent "<用自然语言描述要完成的网页任务>" --minimax
+```
+
+如果已经知道要使用哪个 Skill，可以固定 Skill，只让模型抽取参数：
+
+```powershell
+uv run bua-cua run-intent "<用自然语言描述该 Skill 的本次参数>" --skill <task_name> --minimax
+```
+
+只解析意图和参数、不启动浏览器：
+
+```powershell
+uv run bua-cua run-intent "<用自然语言描述该 Skill 的本次参数>" --skill <task_name> --dry-run --minimax
+```
+
+解析产物会写入：
+
+```text
+runs/<timestamp>-intent/
+  intent_resolution.json
+  args.json
+```
+
+`fixtures/input.example.json` 只是录制样例和 schema 示例，不代表用户本次真实输入。`run-intent` 生成的 `runs/<timestamp>-intent/args.json` 才是本次运行实际使用的参数。
+
+`run-intent --api-first` 会先完成自然语言意图解析，再把生成的 args 交给现有 `run-skill --api-first`。API fast path 仍然只是可选执行优化，不参与 skill 选择或参数抽取。
+
+### 提取 Recovery Cases
+
+`extract-recovery-cases` 会把一次运行中的 recovery 相关 JSONL 日志结构化为 `recovery_cases.json`。它不调用模型，也不写入 `knowledge.json`；后续显式 promote 时再决定哪些 case 可以沉淀。
+
+```powershell
+uv run bua-cua extract-recovery-cases <run_id>
+```
+
+默认输出：
+
+```text
+runs/<run_id>/
+  recovery_cases.json
+```
+
+### API fast path
+
+Task Skill 可以选择包含 `api_registry.json`，用于记录从 trace network 提取并经过审查的 API fast path 候选。API fast path 只适合查询、导出、下载等低风险任务；创建、提交、删除、重启或配置修改类 API 默认不能自动执行。
+
+生成阶段只应把 API 路线沉淀为独立 `api_registry.json`，不要让 `probe-api` 自动修改 `index.ts`。`index.ts` 仍然是 GUI 主线脚本；API fast path 是后置优化层。
+
+探测并固化 API fast path：
+
+```powershell
+uv run bua-cua probe-api <task> --args .\skills\<task>\fixtures\input.example.json
+```
+
+该命令会读取 `skill.json.apiRegistry` 指向的 `api_registry.json`，实际重放只读查询/下载请求，成功后把 candidate 升级为 `probed`，并写入：
+
+```text
+runs/<timestamp>-<task>-api-probe/api_probe.jsonl
+```
+
+如果需要借鉴 browser-harness 式的现场探索，可以让 probe 先执行 GUI 主线并监听同源 API/network 请求：
+
+```powershell
+uv run bua-cua probe-api <task> --args .\skills\<task>\fixtures\input.example.json --observe-gui
+```
+
+该模式会额外写入：
+
+```text
+runs/<timestamp>-<task>-api-probe/api_observation.json
+```
+
+`api_observation.json` 来自 live GUI 执行过程，包含同源 XHR/fetch/API/download 请求、query、状态码和小型 JSON/text/CSV 响应摘要。它是 API/option discovery 的证据，不是 approved fast path；`probe-api` 仍然不会修改 `index.ts`。
+
+使用 API-first 执行：
+
+```powershell
+uv run bua-cua run-skill <task> --args .\skills\<task>\fixtures\input.example.json --api-first
+```
+
+`--api-first` 只执行 `probed` 或 `approved` 且 `risk: "read_only"` 的 fast path。API 参数缺失、schema 不匹配、返回为空、下载文件为空或 registry 未验证时，会记录原因并回退到原 `index.ts` GUI 主线。
+
+推荐执行语义：
+
+```text
+try API fast path
+  -> verify HTTP status / response schema / business fields / downloaded file
+  -> success
+catch
+  -> log api_fast_path_failed
+  -> run GUI path with ctx.withRecovery
+```
+
+Runtime 提供薄 helper，不负责规划 API：
+
+```ts
+const result = await ctx.api.requestJson('query studies', {
+  url: 'https://example.com/api/search',
+  query: { q: args.query },
+});
+
+ctx.api.verify(Array.isArray(result.items), 'API response must contain items');
+
+const file = await ctx.api.download('download csv', {
+  url: 'https://example.com/api/download',
+  query: { format: 'csv' },
+});
+
+ctx.api.verify(file.bytes > 0, 'downloaded file must be non-empty');
+```
+
+`api_registry.json` 是 Skill 的独立产物，`skill.json` 通过 `apiRegistry` 字段引用它。API 路线不能散落成只有自然语言描述的隐式知识。
 
 ### Recovery-driven 真实网站 demo
 

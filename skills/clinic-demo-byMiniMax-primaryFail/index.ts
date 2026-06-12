@@ -32,12 +32,8 @@ function asPositiveInteger(args: Record<string, unknown>, key: string): number {
   return value;
 }
 
-function mapRequiredValue(map: Record<string, string>, value: string, paramName: string): string {
-  const mapped = map[value];
-  if (!mapped) {
-    throw new Error(`当前 Skill 尚无 ${paramName}=${value} 的录制证据或筛选映射`);
-  }
-  return mapped;
+function knownMappedValue(map: Record<string, string>, value: string): string | undefined {
+  return map[value];
 }
 
 function escapeRegex(value: string): string {
@@ -52,6 +48,28 @@ function labelWithOptionalCountRegex(label: string): RegExp {
 
 function labelByBusinessText(page: Page, label: string) {
   return page.locator('label').filter({ hasText: labelWithOptionalCountRegex(label) }).first();
+}
+
+async function isBusinessLabelChecked(page: Page, label: string): Promise<boolean> {
+  const locator = labelByBusinessText(page, label);
+  if ((await locator.count().catch(() => 0)) === 0) {
+    return false;
+  }
+  return await locator.evaluate((element) => {
+    const labelElement = element instanceof HTMLLabelElement ? element : element.closest('label');
+    if (!labelElement) {
+      return false;
+    }
+    const explicitFor = labelElement.getAttribute('for');
+    const explicitControl = explicitFor ? document.getElementById(explicitFor) : undefined;
+    const control = labelElement.control ?? explicitControl ?? labelElement.querySelector('input');
+    if (control instanceof HTMLInputElement) {
+      return control.checked;
+    }
+    return labelElement.getAttribute('aria-checked') === 'true'
+      || labelElement.className.includes('selected')
+      || labelElement.className.includes('checked');
+  });
 }
 
 function urlParam(page: Page, name: string): string {
@@ -87,6 +105,24 @@ async function downloadModalClass(page: Page): Promise<string> {
   return (await page.locator('#download-modal').getAttribute('class').catch(() => '')) ?? '';
 }
 
+async function selectCondition(page: Page, condition: string): Promise<void> {
+  const conditionBox = page.getByRole('combobox', { name: 'Condition/disease' });
+  await conditionBox.click();
+  await conditionBox.fill(conditionTypingPrefix(condition));
+  const exactOption = page.getByRole('option', { name: new RegExp(`^\\s*${escapeRegex(condition)}\\s*$`, 'i') });
+  if ((await exactOption.count().catch(() => 0)) > 0) {
+    await exactOption.first().click();
+    return;
+  }
+  await conditionBox.fill(condition);
+  const typedOption = page.getByRole('option', { name: new RegExp(escapeRegex(condition), 'i') }).first();
+  if ((await typedOption.count().catch(() => 0)) > 0) {
+    await typedOption.click();
+    return;
+  }
+  await conditionBox.press('Enter');
+}
+
 function sanitizeFilename(filename: string): string {
   const sanitized = filename.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/^_+|_+$/g, '');
   return sanitized || 'clinicaltrials-download';
@@ -116,9 +152,9 @@ export async function run(ctx: SkillContext, args: Record<string, unknown>): Pro
   const ageGroup = asNonEmptyString(args, 'ageGroup');
   const resultCount = asPositiveInteger(args, 'resultCount');
 
-  const statusAggFilter = mapRequiredValue(STATUS_AGG_FILTERS, status, 'status');
-  const sexAggFilter = mapRequiredValue(SEX_AGG_FILTERS, sex, 'sex');
-  const ageAggFilter = mapRequiredValue(AGE_AGG_FILTERS, ageGroup, 'ageGroup');
+  const statusAggFilter = knownMappedValue(STATUS_AGG_FILTERS, status);
+  const sexAggFilter = knownMappedValue(SEX_AGG_FILTERS, sex);
+  const ageAggFilter = knownMappedValue(AGE_AGG_FILTERS, ageGroup);
 
   await ctx.withRecovery(
     '打开 ClinicalTrials.gov 首页',
@@ -147,10 +183,7 @@ export async function run(ctx: SkillContext, args: Record<string, unknown>): Pro
   await ctx.withRecovery(
     '选择疾病条件和研究状态并搜索',
     async () => {
-      const conditionBox = page.getByRole('combobox', { name: 'Condition/disease' });
-      await conditionBox.click();
-      await conditionBox.fill(conditionTypingPrefix(condition));
-      await page.getByRole('option', { name: condition, exact: true }).click();
+      await selectCondition(page, condition);
       await labelByBusinessText(page, status).click();
       await page.getByRole('button', { name: 'Search' }).click();
       await page
@@ -181,7 +214,11 @@ export async function run(ctx: SkillContext, args: Record<string, unknown>): Pro
       await expect.poll(() => urlPathname(page), { timeout: 20000 }).toContain('/search');
       await expect.poll(() => urlParam(page, 'cond'), { timeout: 20000 }).toBe(condition);
       await expect.poll(() => urlParam(page, 'viewType'), { timeout: 20000 }).toBe('Card');
-      await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(statusAggFilter);
+      if (statusAggFilter) {
+        await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(statusAggFilter);
+      } else {
+        await expect.poll(async () => await page.locator('ctg-search-hit-card').count(), { timeout: 20000 }).toBeGreaterThan(0);
+      }
     },
   );
 
@@ -194,6 +231,9 @@ export async function run(ctx: SkillContext, args: Record<string, unknown>): Pro
       await page
         .waitForURL(
           (url) => {
+            if (!sexAggFilter || !ageAggFilter) {
+              return url.pathname.includes('/search');
+            }
             const aggFilters = url.searchParams.get('aggFilters') ?? '';
             return aggFilters.includes(sexAggFilter) && aggFilters.includes(ageAggFilter);
           },
@@ -219,9 +259,17 @@ export async function run(ctx: SkillContext, args: Record<string, unknown>): Pro
       await agent.aiTap('click Apply Filters');
     },
     async () => {
-      await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(statusAggFilter);
-      await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(sexAggFilter);
-      await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(ageAggFilter);
+      if (statusAggFilter) {
+        await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(statusAggFilter);
+      }
+      if (sexAggFilter && ageAggFilter) {
+        await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(sexAggFilter);
+        await expect.poll(() => urlParam(page, 'aggFilters'), { timeout: 20000 }).toContain(ageAggFilter);
+      } else {
+        await expect.poll(async () => await isBusinessLabelChecked(page, sex), { timeout: 20000 }).toBe(true);
+        await expect.poll(async () => await isBusinessLabelChecked(page, ageGroup), { timeout: 20000 }).toBe(true);
+        await expect.poll(async () => await page.locator('ctg-search-hit-card').count(), { timeout: 20000 }).toBeGreaterThan(0);
+      }
     },
   );
 

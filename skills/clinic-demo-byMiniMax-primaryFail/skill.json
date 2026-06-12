@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "entry": "index.ts",
   "inferredIntent": "INFERRED_INTENT.md",
+  "apiRegistry": "api_registry.json",
+  "knowledge": "knowledge.json",
   "risk": "read_only",
   "description": "在 ClinicalTrials.gov 上按疾病/状态/性别/年龄筛选临床试验结果，选择指定数量的结果卡片并下载默认导出文件。",
   "requiresSession": false,
@@ -26,26 +28,17 @@
       },
       "status": {
         "type": "string",
-        "description": "初始高级搜索中选择的研究状态。当前证据只覆盖 Recruiting and not yet。",
-        "enum": [
-          "Recruiting and not yet"
-        ],
+        "description": "初始高级搜索中选择的研究状态。优先使用用户自然语言中的业务语义；脚本会尝试通过页面可见标签定位，未录制值应由 step recovery 在当前页面中语义恢复。",
         "default": "Recruiting and not yet"
       },
       "sex": {
         "type": "string",
-        "description": "结果页筛选面板中的性别筛选值。当前证据只覆盖 Male。",
-        "enum": [
-          "Male"
-        ],
+        "description": "结果页筛选面板中的性别筛选值。优先使用用户自然语言中的业务语义；脚本会尝试通过页面可见标签定位，未录制值应由 step recovery 在当前页面中语义恢复。",
         "default": "Male"
       },
       "ageGroup": {
         "type": "string",
-        "description": "结果页筛选面板中的年龄组筛选值。当前证据只覆盖 Child (birth - 17)。",
-        "enum": [
-          "Child (birth - 17)"
-        ],
+        "description": "结果页筛选面板中的年龄组筛选值。优先使用用户自然语言中的业务语义；脚本会尝试通过页面可见标签定位，未录制值应由 step recovery 在当前页面中语义恢复。",
         "default": "Child (birth - 17)"
       },
       "resultCount": {
