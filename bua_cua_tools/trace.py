@@ -287,7 +287,13 @@ def control_key(control: dict[str, Any]) -> str:
 
 def collect_snapshot_facts(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     if not snapshot:
-        return {"controls": [], "dialogLike": [], "textOccurrences": {}}
+        return {
+            "controls": [],
+            "dialogLike": [],
+            "textOccurrences": {},
+            "duplicateTexts": [],
+            "snapshotAvailable": False,
+        }
 
     elements = list(iter_snapshot_elements(snapshot.get("html")))
     labels_by_for: dict[str, list[dict[str, Any]]] = {}
@@ -354,7 +360,9 @@ def collect_snapshot_facts(snapshot: dict[str, Any] | None) -> dict[str, Any]:
     return {
         "controls": controls[:120],
         "dialogLike": dialog_like[:40],
+        "textOccurrences": text_occurrences,
         "duplicateTexts": duplicate_texts,
+        "snapshotAvailable": True,
     }
 
 
@@ -426,13 +434,15 @@ def diff_snapshot_facts(
     before_text = set(frame_snapshot_text(before_snapshot))
     after_text = set(frame_snapshot_text(after_snapshot))
     return {
+        "beforeSnapshotAvailable": before_facts.get("snapshotAvailable", False),
+        "afterSnapshotAvailable": after_facts.get("snapshotAvailable", False),
         "queryParams": query_delta(before_url, after_url),
         "checkedChanges": checked_changes[:20],
         "valueChanges": value_changes[:20],
         "dialogLikeAdded": dialog_added,
         "textAddedSample": sorted(after_text - before_text)[:20],
         "textRemovedSample": sorted(before_text - after_text)[:20],
-        "duplicateTextsAfter": after_facts["duplicateTexts"][:20],
+        "duplicateTextsAfter": after_facts.get("duplicateTexts", [])[:20],
     }
 
 
