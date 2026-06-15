@@ -634,7 +634,6 @@ def generate_file_set(
             base_url,
             api_key,
             timeout,
-            optional_files=OPTIONAL_METADATA_GENERATED_FILES,
             json_mode=json_mode,
             disable_thinking=disable_thinking,
         )
