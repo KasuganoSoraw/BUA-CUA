@@ -77,13 +77,13 @@ await ctx.withRecovery(
 
 不要创建另一套动作 DSL。不要把 Playwright / Midscene API 再包装成自定义点击、输入、断言函数。
 
-## Runtime action boundary
+## Runtime 小动作边界
 
-- In a `ctx.withRecovery` primary function, wrap each key codegen-derived Playwright UI action with `await ctx.action('short action name', async () => { ... });`.
-- `ctx.action` is a runtime API, not a custom helper. It handles non-business interruptions such as cookie banners, notices, masks, alerts, and blocking modals after a small action fails.
-- Keep the business step coarse, but preserve small action boundaries inside primary. The model does not need to predict which action may trigger an interruption.
-- Do not wrap high-risk final business confirmations with automatic retry unless the action explicitly disables interruption handling or uses conservative options. Examples include Submit, Apply, Confirm, Delete, Pay, Download, and Save.
-- Do not create another action DSL. Inside `ctx.action`, call native Playwright APIs directly.
+- 在 `ctx.withRecovery` 的 primary 函数中，codegen 派生的关键 Playwright UI 小动作应使用 `await ctx.action('简短动作名', async () => { ... });` 包裹。
+- `ctx.action` 是 runtime API，不是模型自定义 helper。它用于在小动作失败后处理 cookie 横幅、公告、提示、遮罩、alert、modal 等非业务阻塞弹窗。
+- 业务 step 仍应保持按页面状态转换切分，不要机械拆成每个底层 click/fill；但 primary 内要保留关键小动作边界。模型不需要预测哪些动作容易触发弹窗。
+- 高风险业务确认动作不要默认使用自动重试型 `ctx.action`，除非显式禁用 interruption 或传入更保守的 options。例如 Submit、Apply、Confirm、Delete、Pay、Download、Save。
+- 不要创建另一套动作 DSL。`ctx.action` 内部应直接调用原生 Playwright API。
 
 ## 生成原则
 
