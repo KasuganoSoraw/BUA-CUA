@@ -440,6 +440,8 @@ def build_index_generation_prompt(inputs: GenerationInputs, metadata_files: dict
 - `index.ts` 必须导出 `run(ctx: SkillContext, args: Record<string, unknown>): Promise<void>`。
 - `index.ts` 必须可被当前项目 `npm run typecheck` 检查。
 - 网页业务操作 step 应优先使用 `ctx.withRecovery`；无稳定 primary path 时才使用 `ctx.recoverStep`。
+- 在 `ctx.withRecovery` 的 primary 中，codegen 派生的关键 Playwright UI 小动作必须用 `await ctx.action("动作名", async () => {{ ... }})` 保留动作边界；`ctx.action` 是 runtime API，不是自定义 helper。
+- 模型不需要判断哪些动作容易触发弹窗；只需要保留 fill/click/select/download trigger 等关键动作边界。高风险业务确认动作（Submit/Apply/Confirm/Delete/Pay/Download/Save 等）不要使用自动重试型 `ctx.action`，除非显式传入更保守 options 或禁用 interruption。
 - 如果第一阶段生成了 `api_registry.json`，第二阶段可以参考它理解可选 API 路线，但不要把 API-first 逻辑写进 `index.ts`。`index.ts` 必须保持 GUI 主链路；API fast path 由 `probe-api` 固化，并由 `run-skill --api-first` 在运行时优先尝试，失败后回退 GUI。
 - verifier 必须按业务 step 判断状态达成，不要把下一步要点击的按钮可见性当作当前 step 的 verifier。
 - 如果 trace logs 显示下一步 click 会自动 `scrolling into view if needed`，不要在前一步强行 `toBeVisible()` 验证该按钮。

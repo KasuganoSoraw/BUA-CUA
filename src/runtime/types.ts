@@ -22,6 +22,16 @@ export type SkillManifest = {
 
 export type LogLevel = 'info' | 'warn' | 'error';
 
+export type ActionOptions = {
+  interruption?: 'dismiss-non-business' | 'disabled';
+  retries?: number;
+  useMidscene?: boolean;
+  safeLabels?: string[];
+  forbiddenLabels?: string[];
+  forbiddenText?: string[];
+  risk?: 'read_only' | 'write_review_required' | 'destructive_review_required';
+};
+
 export type RuntimeEvent = {
   runId: string;
   timestamp: string;
@@ -43,6 +53,7 @@ export type SkillContext = {
   runId: string;
   skillName: string;
   inferredIntent?: string;
+  action<T>(name: string, fn: () => Promise<T>, options?: ActionOptions): Promise<T>;
   step<T>(name: string, fn: () => Promise<T>): Promise<T>;
   withFallback<T>(
     name: string,

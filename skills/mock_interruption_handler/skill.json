@@ -1,0 +1,15 @@
+{
+  "name": "mock_interruption_handler",
+  "type": "task",
+  "version": "0.1.0",
+  "description": "Mock read-only Task Skill covering runtime ctx.action interruption handling.",
+  "entry": "index.ts",
+  "inferredIntent": "INFERRED_INTENT.md",
+  "risk": "read_only",
+  "requiresSession": false,
+  "argsSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

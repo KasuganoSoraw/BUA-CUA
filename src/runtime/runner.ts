@@ -11,9 +11,10 @@ import type { RecoveryOptions } from '../recovery/types.js';
 import { startApiObservation } from './api_observer.js';
 import { loadApiRegistry, runApiFastPath } from './api_fast_path.js';
 import { createApiHelper } from './api.js';
+import { maybeDismissInterruption } from './interruption.js';
 import { JsonlLogger } from './logger.js';
 import { applyProviderEnvironment, type ProviderName } from './providers.js';
-import type { SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
+import type { ActionOptions, LogLevel, SkillArgs, SkillContext, SkillManifest, SkillModule } from './types.js';
 
 dotenv.config();
 
@@ -174,6 +175,69 @@ function makeContext(params: {
     return screenshotPath;
   }
 
+  function logForAction(
+    actionName: string,
+    type: string,
+    message?: string,
+    data?: Record<string, unknown>,
+    level: LogLevel = 'info',
+  ): void {
+    logger.write({ level, type, skill: manifest.name, step: actionName, message, data });
+  }
+
+  async function checkInterruption(
+    actionName: string,
+    cause: unknown,
+    options?: ActionOptions,
+  ): Promise<boolean> {
+    const result = await maybeDismissInterruption({
+      page,
+      agent,
+      manifest,
+      actionName,
+      cause,
+      options,
+      log(type, message, data, level) {
+        logForAction(actionName, type, message, data, level ?? 'info');
+      },
+    });
+    return result.dismissed;
+  }
+
+  async function runVerifierOnce(
+    stepName: string,
+    verify: () => Promise<void>,
+    failureEvent: 'verify_failed' | 'recovery_verify_failed' | undefined,
+  ): Promise<{ ok: true } | { ok: false; error: unknown }> {
+    logger.info(manifest.name, 'verify_start', undefined, undefined, stepName);
+    try {
+      await verify();
+      logger.info(manifest.name, 'verify_end', undefined, undefined, stepName);
+      return { ok: true };
+    } catch (error) {
+      if (failureEvent) {
+        logger.warn(manifest.name, failureEvent, errorMessage(error), undefined, stepName);
+      }
+      const dismissed = await checkInterruption(`${stepName} verifier`, error, { risk: manifest.risk });
+      if (!dismissed) {
+        return { ok: false, error };
+      }
+
+      logger.info(manifest.name, 'interruption_retry_verify', undefined, undefined, stepName);
+      logger.info(manifest.name, 'verify_start', undefined, { retriedAfterInterruption: true }, stepName);
+      try {
+        await verify();
+        logger.info(manifest.name, 'verify_end', undefined, { retriedAfterInterruption: true }, stepName);
+        return { ok: true };
+      } catch (retryError) {
+        if (failureEvent) {
+          logger.warn(manifest.name, failureEvent, errorMessage(retryError), { retriedAfterInterruption: true }, stepName);
+        }
+        return { ok: false, error: retryError };
+      }
+    }
+  }
+
   return {
     page,
     browser,
@@ -184,6 +248,41 @@ function makeContext(params: {
     runId: logger.runId,
     skillName: manifest.name,
     inferredIntent,
+    async action<T>(name: string, fn: () => Promise<T>, options?: ActionOptions): Promise<T> {
+      logger.info(manifest.name, 'action_start', undefined, undefined, name);
+      try {
+        const result = await fn();
+        logger.info(manifest.name, 'action_end', undefined, undefined, name);
+        return result;
+      } catch (error) {
+        logger.warn(manifest.name, 'action_failed', errorMessage(error), undefined, name);
+        const retries = Math.min(Math.max(options?.retries ?? 1, 0), 1);
+        if (retries < 1) {
+          throw error;
+        }
+
+        const dismissed = await checkInterruption(name, error, options);
+        if (!dismissed) {
+          throw error;
+        }
+
+        logger.info(manifest.name, 'interruption_retry_action', undefined, undefined, name);
+        try {
+          const retryResult = await fn();
+          logger.info(manifest.name, 'action_end', undefined, { retriedAfterInterruption: true }, name);
+          return retryResult;
+        } catch (retryError) {
+          logger.warn(
+            manifest.name,
+            'action_failed',
+            errorMessage(retryError),
+            { retriedAfterInterruption: true },
+            name,
+          );
+          throw retryError;
+        }
+      }
+    },
     async step<T>(name: string, fn: () => Promise<T>): Promise<T> {
       logger.info(manifest.name, 'step_start', name, undefined, name);
       try {
@@ -241,23 +340,7 @@ function makeContext(params: {
           if (!verify) {
             return { ok: true };
           }
-          logger.info(manifest.name, 'verify_start', undefined, undefined, name);
-          try {
-            await verify();
-            logger.info(manifest.name, 'verify_end', undefined, undefined, name);
-            return { ok: true };
-          } catch (error) {
-            if (failureEvent) {
-              logger.warn(
-                manifest.name,
-                failureEvent,
-                error instanceof Error ? error.message : String(error),
-                undefined,
-                name,
-              );
-            }
-            return { ok: false, error };
-          }
+          return runVerifierOnce(name, verify, failureEvent);
         }
 
         try {
@@ -326,9 +409,10 @@ function makeContext(params: {
             throw error;
           }
           if (verify) {
-            logger.info(manifest.name, 'verify_start', undefined, undefined, name);
-            await verify();
-            logger.info(manifest.name, 'verify_end', undefined, undefined, name);
+            const fallbackVerify = await runVerify('recovery_verify_failed');
+            if (!fallbackVerify.ok) {
+              throw fallbackVerify.error;
+            }
           }
         }
 
